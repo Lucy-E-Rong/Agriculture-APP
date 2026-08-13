@@ -1,9 +1,21 @@
 import { AiProvider } from "@/store/appStore";
 import { Language } from "@/lib/i18n";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+export const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://agriculture-app-green.vercel.app";
+
+export async function verifyAccessCode(accessCode: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/access/verify`, {
+    headers: { "X-Demo-Access-Code": accessCode }
+  });
+
+  if (!response.ok) {
+    throw new Error(response.status === 401 ? "Invalid access code" : `Access check failed with status ${response.status}`);
+  }
+}
 
 export type AnalyzeScanInput = {
+  accessCode: string;
   imageBase64?: string;
   imageUri?: string;
   imageMimeType?: string;
@@ -45,12 +57,14 @@ export type AnalyzeScanResult = {
 };
 
 export async function analyzeScan(input: AnalyzeScanInput): Promise<AnalyzeScanResult> {
+  const { accessCode, ...payload } = input;
   const response = await fetch(`${API_BASE_URL}/api/scans/analyze`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "X-Demo-Access-Code": accessCode
     },
-    body: JSON.stringify(input)
+    body: JSON.stringify(payload)
   });
 
   if (!response.ok) {

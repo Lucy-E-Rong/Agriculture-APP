@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ActivityIndicator, Image, Pressable, StyleSheet, View } from "react-native";
+import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
@@ -11,30 +12,95 @@ import { analyzeScan, AnalyzeScanResult } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { useAppStore } from "@/store/appStore";
 
+const MAX_IMAGE_DIMENSION = 1600;
+const FALLBACK_IMAGE_DIMENSION = 1200;
+const SAFE_BASE64_LENGTH = 3_500_000;
+
+async function compressImage(
+  uri: string,
+  width: number,
+  height: number,
+  maxDimension: number,
+  quality: number
+) {
+  const context = ImageManipulator.ImageManipulator.manipulate(uri);
+  const largestDimension = Math.max(width, height);
+
+  if (largestDimension > maxDimension) {
+    context.resize(
+      width >= height
+        ? { width: maxDimension, height: null }
+        : { width: null, height: maxDimension }
+    );
+  }
+
+  const rendered = await context.renderAsync();
+  return rendered.saveAsync({
+    base64: true,
+    compress: quality,
+    format: ImageManipulator.SaveFormat.JPEG
+  });
+}
+
 export default function ScanScreen() {
   const language = useAppStore((state) => state.language);
   const aiProvider = useAppStore((state) => state.aiProvider);
+  const accessCode = useAppStore((state) => state.accessCode);
   const setAiProvider = useAppStore((state) => state.setAiProvider);
   const [imageUri, setImageUri] = useState<string | undefined>();
   const [imageBase64, setImageBase64] = useState<string | undefined>();
   const [imageMimeType, setImageMimeType] = useState("image/jpeg");
   const [result, setResult] = useState<AnalyzeScanResult | undefined>();
+  const [preparingImage, setPreparingImage] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
   async function pickImage() {
     const picked = await ImagePicker.launchImageLibraryAsync({
-      base64: true,
+      base64: false,
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8
+      quality: 1
     });
 
     if (!picked.canceled) {
-      setImageUri(picked.assets[0].uri);
-      setImageBase64(picked.assets[0].base64 ?? undefined);
-      setImageMimeType(picked.assets[0].mimeType ?? "image/jpeg");
+      setPreparingImage(true);
       setResult(undefined);
       setError(undefined);
+
+      try {
+        const asset = picked.assets[0];
+        let prepared = await compressImage(
+          asset.uri,
+          asset.width,
+          asset.height,
+          MAX_IMAGE_DIMENSION,
+          0.7
+        );
+
+        if ((prepared.base64?.length ?? 0) > SAFE_BASE64_LENGTH) {
+          prepared = await compressImage(
+            prepared.uri,
+            prepared.width,
+            prepared.height,
+            FALLBACK_IMAGE_DIMENSION,
+            0.5
+          );
+        }
+
+        if (!prepared.base64 || prepared.base64.length > SAFE_BASE64_LENGTH) {
+          throw new Error("Compressed image is still too large");
+        }
+
+        setImageUri(prepared.uri);
+        setImageBase64(prepared.base64);
+        setImageMimeType("image/jpeg");
+      } catch {
+        setImageUri(undefined);
+        setImageBase64(undefined);
+        setError(t(language, "imageProcessingFailed"));
+      } finally {
+        setPreparingImage(false);
+      }
     }
   }
 
@@ -48,6 +114,7 @@ export default function ScanScreen() {
     setError(undefined);
     try {
       const response = await analyzeScan({
+        accessCode,
         imageBase64,
         imageUri,
         imageMimeType,
@@ -106,13 +173,13 @@ export default function ScanScreen() {
             <AppText variant="caption">{t(language, "chooseImage")}</AppText>
           </View>
         )}
-        <PrimaryButton variant="secondary" onPress={pickImage}>
-          {t(language, "chooseImage")}
+        <PrimaryButton variant="secondary" disabled={preparingImage || loading} onPress={pickImage}>
+          {preparingImage ? t(language, "preparingImage") : t(language, "chooseImage")}
         </PrimaryButton>
-        <PrimaryButton disabled={loading || !imageBase64} onPress={submit}>
+        <PrimaryButton disabled={preparingImage || loading || !imageBase64} onPress={submit}>
           {loading ? t(language, "analyzing") : t(language, "analyze")}
         </PrimaryButton>
-        {loading ? <ActivityIndicator color={colors.primary} /> : null}
+        {preparingImage || loading ? <ActivityIndicator color={colors.primary} /> : null}
         {error ? <AppText variant="caption">{error}</AppText> : null}
       </Card>
 

@@ -27,9 +27,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
     paddingHorizontal: 18,
     paddingTop: 14,
     gap: 16
   }
 });
-
