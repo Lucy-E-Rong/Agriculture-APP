@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "FarmScout",
+    "slug": "farmscout",
+    "scheme": "farmscout",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "platforms": ["ios", "android"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.farmscout.app"
+    },
+    "android": {
+      "package": "com.farmscout.app"
+    },
+    "plugins": ["expo-router", "expo-camera", "expo-image-picker"],
+    "extra": {
+      "apiBaseUrl": "http://localhost:8000"
+    }
+  }
+}
+
