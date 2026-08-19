@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { AccessGate } from "@/components/AccessGate";
+import { Analytics } from "@vercel/analytics/react";
 
 export default function RootLayout() {
   return (
@@ -9,6 +10,7 @@ export default function RootLayout() {
       <AccessGate>
         <Stack screenOptions={{ headerShown: false }} />
       </AccessGate>
+      <Analytics />
     </>
   );
 }
