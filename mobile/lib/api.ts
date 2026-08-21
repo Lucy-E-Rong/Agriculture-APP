@@ -26,6 +26,7 @@ export type AnalyzeScanInput = {
   sectionId?: string;
   tableId?: string;
   rowId?: string;
+  locationSnapshot?: Record<string, string>;
 };
 
 export type AnalyzeScanResult = {
@@ -56,7 +57,38 @@ export type AnalyzeScanResult = {
   needs_human_review: boolean;
 };
 
-export async function analyzeScan(input: AnalyzeScanInput): Promise<AnalyzeScanResult> {
+export type PersistedAnalyzeScanResult = AnalyzeScanResult & {
+  scan_id: string;
+  created_at: string;
+};
+
+export type RecentScan = {
+  id: string;
+  created_at: string;
+  stress_level: AnalyzeScanResult["stress_level"];
+  severity_score: number;
+  confidence: number;
+  diagnosis: string;
+  location_snapshot: Record<string, string>;
+};
+
+export type ScanDetail = RecentScan & {
+  analysis_result: AnalyzeScanResult;
+  image_url: string;
+};
+
+type FetchResponse = Awaited<ReturnType<typeof fetch>>;
+
+async function responseError(response: FetchResponse, fallback: string) {
+  try {
+    const payload = await response.json();
+    return new Error(typeof payload.detail === "string" ? payload.detail : fallback);
+  } catch {
+    return new Error(fallback);
+  }
+}
+
+export async function analyzeScan(input: AnalyzeScanInput): Promise<PersistedAnalyzeScanResult> {
   const { accessCode, ...payload } = input;
   const response = await fetch(`${API_BASE_URL}/api/scans/analyze`, {
     method: "POST",
@@ -68,8 +100,28 @@ export async function analyzeScan(input: AnalyzeScanInput): Promise<AnalyzeScanR
   });
 
   if (!response.ok) {
-    throw new Error(`Analyze scan failed with status ${response.status}`);
+    throw await responseError(response, `Analyze scan failed with status ${response.status}`);
   }
 
+  return response.json();
+}
+
+export async function getRecentScans(accessCode: string): Promise<RecentScan[]> {
+  const response = await fetch(`${API_BASE_URL}/api/scans/recent`, {
+    headers: { "X-Demo-Access-Code": accessCode }
+  });
+  if (!response.ok) {
+    throw await responseError(response, `Recent scans failed with status ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function getScanDetail(accessCode: string, scanId: string): Promise<ScanDetail> {
+  const response = await fetch(`${API_BASE_URL}/api/scans/${encodeURIComponent(scanId)}`, {
+    headers: { "X-Demo-Access-Code": accessCode }
+  });
+  if (!response.ok) {
+    throw await responseError(response, `Scan detail failed with status ${response.status}`);
+  }
   return response.json();
 }

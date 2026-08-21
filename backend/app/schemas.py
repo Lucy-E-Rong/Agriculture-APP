@@ -1,4 +1,6 @@
-from typing import Literal
+from datetime import datetime
+from typing import Any, Literal
+from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 AiProvider = Literal["gemini", "api_provider", "local_vlm", "mock"]
@@ -36,6 +38,7 @@ class AnalyzeScanRequest(BaseModel):
     section_id: str | None = None
     table_id: str | None = None
     row_id: str | None = None
+    location_snapshot: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="before")
     @classmethod
@@ -51,6 +54,7 @@ class AnalyzeScanRequest(BaseModel):
             "sectionId": "section_id",
             "tableId": "table_id",
             "rowId": "row_id",
+            "locationSnapshot": "location_snapshot",
         }
         normalized = dict(data)
         for camel_key, snake_key in key_map.items():
@@ -73,6 +77,26 @@ class AnalyzeScanResponse(BaseModel):
     detected_issues: list[str]
     recommendations: list[str]
     needs_human_review: bool
+
+
+class PersistedAnalyzeScanResponse(AnalyzeScanResponse):
+    scan_id: UUID
+    created_at: datetime
+
+
+class RecentScan(BaseModel):
+    id: UUID
+    created_at: datetime
+    stress_level: StressLevel
+    severity_score: int = Field(ge=0, le=5)
+    confidence: float = Field(ge=0, le=1)
+    diagnosis: str
+    location_snapshot: dict[str, Any] = Field(default_factory=dict)
+
+
+class ScanDetail(RecentScan):
+    analysis_result: AnalyzeScanResponse
+    image_url: str
 
 
 class HealthResponse(BaseModel):

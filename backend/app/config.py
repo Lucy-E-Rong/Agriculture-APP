@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     supabase_url: str | None = None
     supabase_service_role_key: str | None = None
     supabase_storage_bucket: str = "scan-images"
+    supabase_signed_url_ttl_seconds: int = 300
 
     openai_api_key: str | None = None
     openai_model: str = "gpt-4o-mini"
@@ -22,6 +23,15 @@ class Settings(BaseSettings):
 
     local_vlm_url: str = "http://localhost:9000/v1/analyze"
     local_vlm_api_key: str | None = None
+
+    gcp_project_id: str | None = None
+    gcp_project_number: str | None = None
+    gcp_service_account_email: str | None = None
+    gcp_workload_identity_pool_id: str | None = None
+    gcp_workload_identity_pool_provider_id: str | None = None
+    gcp_audit_log_id: str | None = None
+    vercel: str | None = None
+    vercel_env: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

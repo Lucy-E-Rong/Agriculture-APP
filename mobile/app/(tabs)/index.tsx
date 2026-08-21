@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, View } from "react-native";
-import { Link } from "expo-router";
+import { useCallback, useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { Link, useFocusEffect } from "expo-router";
 import { Settings } from "lucide-react-native";
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
@@ -7,19 +8,46 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { StressBadge } from "@/components/StressBadge";
 import { colors } from "@/constants/colors";
-import { recentScans } from "@/lib/mockData";
+import { getRecentScans, RecentScan } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { useAppStore } from "@/store/appStore";
 
 export default function DashboardScreen() {
   const language = useAppStore((state) => state.language);
+  const accessCode = useAppStore((state) => state.accessCode);
+  const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
+  const [loadingRecent, setLoadingRecent] = useState(true);
+  const [recentError, setRecentError] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      setLoadingRecent(true);
+      setRecentError(false);
+      getRecentScans(accessCode)
+        .then((scans) => {
+          if (active) setRecentScans(scans);
+        })
+        .catch(() => {
+          if (active) {
+            setRecentScans([]);
+            setRecentError(true);
+          }
+        })
+        .finally(() => {
+          if (active) setLoadingRecent(false);
+        });
+      return () => {
+        active = false;
+      };
+    }, [accessCode])
+  );
 
   return (
     <Screen>
       <View style={styles.header}>
         <View>
           <AppText variant="title">{t(language, "appName")}</AppText>
-          <AppText variant="caption">{t(language, "mockNotice")}</AppText>
         </View>
         <Link href="/settings" asChild>
           <Pressable style={styles.iconButton}>
@@ -44,20 +72,36 @@ export default function DashboardScreen() {
       </View>
 
       <AppText variant="subtitle">{t(language, "recentScans")}</AppText>
+      {loadingRecent ? <ActivityIndicator color={colors.primary} /> : null}
+      {!loadingRecent && recentError ? <AppText variant="caption">{t(language, "recentScansError")}</AppText> : null}
+      {!loadingRecent && !recentError && recentScans.length === 0 ? (
+        <AppText variant="caption">{t(language, "emptyState")}</AppText>
+      ) : null}
       {recentScans.map((scan) => (
-        <Card key={scan.id} style={styles.scanCard}>
-          <View style={styles.rowBetween}>
-            <View style={styles.scanText}>
-              <AppText variant="subtitle">{scan.crop}</AppText>
-              <AppText variant="caption">{scan.location}</AppText>
-            </View>
-            <StressBadge level={scan.stress} language={language} />
-          </View>
-          <AppText variant="caption">{scan.time}</AppText>
-        </Card>
+        <Link key={scan.id} href={`/scans/${scan.id}`} asChild>
+          <Pressable>
+            <Card style={styles.scanCard}>
+              <View style={styles.rowBetween}>
+                <View style={styles.scanText}>
+                  <AppText variant="subtitle">{t(language, "lettuceScan")}</AppText>
+                  <AppText variant="caption">{scan.location_snapshot.display ?? t(language, "unknown")}</AppText>
+                </View>
+                <StressBadge level={scan.stress_level} language={language} />
+              </View>
+              <AppText variant="caption">{formatScanTime(scan.created_at, language)}</AppText>
+            </Card>
+          </Pressable>
+        </Link>
       ))}
     </Screen>
   );
+}
+
+function formatScanTime(value: string, language: "en" | "zh") {
+  return new Intl.DateTimeFormat(language === "zh" ? "zh-CN" : "en-US", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(new Date(value));
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {

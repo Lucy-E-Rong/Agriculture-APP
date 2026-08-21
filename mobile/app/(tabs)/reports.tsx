@@ -17,7 +17,6 @@ export default function ReportsScreen() {
     <Screen>
       <View>
         <AppText variant="title">{t(language, "reports")}</AppText>
-        <AppText variant="caption">{t(language, "mockNotice")}</AppText>
       </View>
 
       <Card style={styles.trendCard}>
@@ -100,4 +99,3 @@ const styles = StyleSheet.create({
     gap: 12
   }
 });
-

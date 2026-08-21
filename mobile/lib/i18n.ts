@@ -13,6 +13,10 @@ const translations = {
     activeAlerts: "Active alerts",
     greenhouses: "Greenhouses",
     recentScans: "Recent scans",
+    recentScansError: "Recent scans could not be loaded. Please try again.",
+    lettuceScan: "Lettuce scan",
+    scanDetails: "Scan details",
+    scanDetailError: "This scan could not be opened. Please return and try again.",
     scanNow: "Scan now",
     addCrop: "Plant crop",
     addLocation: "Add location",
@@ -61,7 +65,6 @@ const translations = {
     reportSummary: "Stress trend",
     highRiskRows: "High-risk rows",
     emptyState: "No records yet",
-    mockNotice: "Sample data is shown until the backend is connected.",
     unknown: "Unknown"
   },
   zh: {
@@ -76,6 +79,10 @@ const translations = {
     activeAlerts: "活跃警报",
     greenhouses: "温室",
     recentScans: "最近扫描",
+    recentScansError: "无法加载最近扫描，请重试。",
+    lettuceScan: "生菜扫描",
+    scanDetails: "扫描详情",
+    scanDetailError: "无法打开此扫描，请返回后重试。",
     scanNow: "开始扫描",
     addCrop: "种植作物",
     addLocation: "添加位置",
@@ -124,7 +131,6 @@ const translations = {
     reportSummary: "压力趋势",
     highRiskRows: "高风险行",
     emptyState: "暂无记录",
-    mockNotice: "连接后端前显示示例数据。",
     unknown: "未知"
   }
 } satisfies Record<Language, Record<string, string>>;

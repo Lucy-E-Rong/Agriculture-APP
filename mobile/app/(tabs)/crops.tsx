@@ -16,7 +16,6 @@ export default function CropsScreen() {
       <View style={styles.header}>
         <View>
           <AppText variant="title">{t(language, "crops")}</AppText>
-          <AppText variant="caption">{t(language, "mockNotice")}</AppText>
         </View>
         <PrimaryButton variant="secondary">{t(language, "addCrop")}</PrimaryButton>
       </View>
@@ -80,4 +79,3 @@ const styles = StyleSheet.create({
     gap: 12
   }
 });
-

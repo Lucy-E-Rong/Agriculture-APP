@@ -5,10 +5,10 @@ import * as ImagePicker from "expo-image-picker";
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { ScanAnalysisResult } from "@/components/ScanAnalysisResult";
 import { Screen } from "@/components/Screen";
-import { StressBadge } from "@/components/StressBadge";
 import { colors } from "@/constants/colors";
-import { analyzeScan, AnalyzeScanResult } from "@/lib/api";
+import { analyzeScan, PersistedAnalyzeScanResult } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { useAppStore } from "@/store/appStore";
 
@@ -50,7 +50,7 @@ export default function ScanScreen() {
   const [imageUri, setImageUri] = useState<string | undefined>();
   const [imageBase64, setImageBase64] = useState<string | undefined>();
   const [imageMimeType, setImageMimeType] = useState("image/jpeg");
-  const [result, setResult] = useState<AnalyzeScanResult | undefined>();
+  const [result, setResult] = useState<PersistedAnalyzeScanResult | undefined>();
   const [preparingImage, setPreparingImage] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -124,7 +124,14 @@ export default function ScanScreen() {
         greenhouseId: "gh-1",
         sectionId: "sec-a",
         tableId: "table-1",
-        rowId: "row-1"
+        rowId: "row-1",
+        locationSnapshot: {
+          display: "GH1 · SA · T1 · R1",
+          greenhouse: "Greenhouse 1",
+          section: "Section A",
+          table: "Table 1",
+          row: "Row 1 · Romaine"
+        }
       });
       setResult(response);
     } catch (scanError) {
@@ -183,45 +190,7 @@ export default function ScanScreen() {
         {error ? <AppText variant="caption">{error}</AppText> : null}
       </Card>
 
-      {result ? (
-        <Card style={styles.resultCard}>
-          <View style={styles.resultHeader}>
-            <AppText variant="subtitle">{t(language, "diagnosis")}</AppText>
-            <StressBadge level={result.stress_level} language={language} />
-          </View>
-          {!result.image_quality.usable ? (
-            <View style={styles.section}>
-              <AppText variant="label">{t(language, "imageQuality")}</AppText>
-              {result.image_quality.issues.map((item) => <AppText key={item}>• {item}</AppText>)}
-              {result.image_quality.retake_guidance.map((item) => <AppText key={item}>• {item}</AppText>)}
-            </View>
-          ) : null}
-          <Field label={t(language, "severity")} value={`${result.severity_score}/5`} />
-          <Field label={t(language, "confidence")} value={`${Math.round(result.confidence * 100)}%`} />
-          <AppText>{result.diagnosis}</AppText>
-          {result.observed_symptoms.length ? (
-            <View style={styles.section}>
-              <AppText variant="label">{t(language, "visibleSigns")}</AppText>
-              {result.observed_symptoms.map((item, index) => (
-                <AppText key={`${item.type}-${index}`}>• {item.description} ({item.location})</AppText>
-              ))}
-            </View>
-          ) : null}
-          {result.possible_causes.length ? (
-            <View style={styles.section}>
-              <AppText variant="label">{t(language, "possibleCauses")}</AppText>
-              {result.possible_causes.map((item, index) => (
-                <AppText key={`${item.category}-${index}`}>• {item.category}: {item.reason}</AppText>
-              ))}
-            </View>
-          ) : null}
-          <AppText variant="label">{t(language, "recommendations")}</AppText>
-          {result.recommendations.map((item) => (
-            <AppText key={item}>• {item}</AppText>
-          ))}
-          {result.needs_human_review ? <AppText style={styles.review}>{t(language, "humanReview")}</AppText> : null}
-        </Card>
-      ) : null}
+      {result ? <ScanAnalysisResult result={result} language={language} /> : null}
     </Screen>
   );
 }
@@ -296,19 +265,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center"
   },
-  resultCard: {
-    gap: 12
-  },
-  resultHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between"
-  },
-  section: {
-    gap: 7
-  },
-  review: {
-    color: colors.amberDark,
-    fontWeight: "800"
-  }
 });

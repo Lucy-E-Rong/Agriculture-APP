@@ -1,0 +1,80 @@
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Image, Pressable, StyleSheet, View } from "react-native";
+import { Link, useLocalSearchParams } from "expo-router";
+import { ChevronLeft } from "lucide-react-native";
+import { AppText } from "@/components/AppText";
+import { ScanAnalysisResult } from "@/components/ScanAnalysisResult";
+import { Screen } from "@/components/Screen";
+import { colors } from "@/constants/colors";
+import { getScanDetail, ScanDetail } from "@/lib/api";
+import { t } from "@/lib/i18n";
+import { useAppStore } from "@/store/appStore";
+
+export default function ScanDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const language = useAppStore((state) => state.language);
+  const accessCode = useAppStore((state) => state.accessCode);
+  const [detail, setDetail] = useState<ScanDetail>();
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setDetail(undefined);
+    setError(false);
+    if (!id) {
+      setError(true);
+      return () => {
+        active = false;
+      };
+    }
+    getScanDetail(accessCode, id)
+      .then((value) => {
+        if (active) setDetail(value);
+      })
+      .catch(() => {
+        if (active) setError(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [accessCode, id]);
+
+  return (
+    <Screen>
+      <View style={styles.header}>
+        <Link href="/(tabs)" asChild>
+          <Pressable style={styles.backButton}>
+            <ChevronLeft color={colors.primary} size={22} />
+          </Pressable>
+        </Link>
+        <View style={styles.headerText}>
+          <AppText variant="title">{t(language, "scanDetails")}</AppText>
+          {detail ? <AppText variant="caption">{detail.location_snapshot.display ?? t(language, "unknown")}</AppText> : null}
+        </View>
+      </View>
+
+      {!detail && !error ? <ActivityIndicator color={colors.primary} /> : null}
+      {error ? <AppText>{t(language, "scanDetailError")}</AppText> : null}
+      {detail ? (
+        <>
+          <Image source={{ uri: detail.image_url }} style={styles.image} resizeMode="cover" />
+          <ScanAnalysisResult result={detail.analysis_result} language={language} />
+        </>
+      ) : null}
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  header: { flexDirection: "row", alignItems: "center", gap: 12 },
+  headerText: { flex: 1, gap: 2 },
+  backButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primaryTint
+  },
+  image: { width: "100%", height: 300, borderRadius: 12, backgroundColor: colors.primaryTint }
+});
