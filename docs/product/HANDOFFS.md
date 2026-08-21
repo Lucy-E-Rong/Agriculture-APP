@@ -5,38 +5,20 @@ transcripts.
 
 ## Open handoffs
 
-Date: 2026-08-21
-Requirement ID: REQ-004
-From: Product Manager
-To: Full-stack Engineer
-Status: in progress; GCP data layer verified and Full-stack integration requested
-Approved scope: Dedicated `farmscout-access-audit` Cloud Logging bucket with
-seven-day retention; one minimized structured event per relevant FastAPI
-request; dedicated view and least-privilege IAM; no product-database storage.
-Evidence/files: REQUIREMENTS.md; DEC-005; DEC-007
-Decisions already made: Existing Google Monitoring continues to supply Gemini
-aggregate metrics; only the owner and individually authorized engineers may
-view; runtime identity is Logs Writer only; billing must be enabled; estimated
-Demo usage is within the current logging free allotment but zero cost is not
-guaranteed; seven days means no longer queryable, with eventually consistent
-physical deletion.
-Open questions: Vercel Team issuer, team slug, and project name must be confirmed
-before creating a production-subject-only GCP Workload Identity Federation
-binding. Do not create a long-lived service-account JSON key or grant an entire
-identity pool access.
-Requested next action: Full-stack Engineer enables/configures the approved
-Vercel-to-GCP keyless identity boundary, implements centralized FastAPI audit
-event emission, and completes local/identity integration checks. Commit, push,
-and deployment are not authorized.
-Evidence/files: `docs/data/REQ-004-cloud-logging.md`; active GCP bucket
-`farmscout-access-audit` (`us-east1`, seven-day retention, Analytics off); sink
-`farmscout-access-audit-sink` restricted to the matching log name; view
-`farmscout-access-audit-view`; keyless writer service account
-`farmscout-audit-writer@vlm-api-2026-001.iam.gserviceaccount.com` with Logs Writer
-only; allowlisted synthetic event successfully written and queried through the
-dedicated view.
+None. User acceptance remains pending for the deployed `0.2.0` candidate.
 
 ## Completed handoffs
+
+Date: 2026-08-21
+Requirement ID: REQ-002, REQ-003, REQ-004, REQ-005
+From: Full-stack Engineer
+To: Product Manager and user
+Status: implemented and deployed; not validated
+Evidence/files: production FastAPI and Expo Web deployments; backend tests;
+Expo lint, TypeScript, and Web export; production health/access/API/Web smoke;
+real Vercel WIF Cloud Logging event; `docs/product/releases/v0.2.0.md`
+Requested next action: User or team performs product acceptance. Product Manager
+marks only accepted requirements `validated` and releases the candidate.
 
 Date: 2026-08-21
 Requirement ID: REQ-003, REQ-005

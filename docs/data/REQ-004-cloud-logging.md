@@ -1,7 +1,7 @@
 # REQ-004 Cloud Logging Contract
 
-Status: cloud data layer verified on 2026-08-21. FastAPI emission and end-to-end
-request validation remain in progress, so REQ-004 is not yet implemented.
+Status: implemented and deployed on 2026-08-21; technical production checks
+passed. User acceptance remains pending, so REQ-004 is not yet validated.
 
 ## Resource boundary
 
@@ -145,14 +145,16 @@ decision, secure Vercel-only storage, rotation, and revocation procedure.
 - [x] Runtime identity has exactly `roles/logging.logWriter`; the predefined
   role contains only `logging.logEntries.create` and
   `logging.logEntries.route`. The service account has no key.
-- [ ] Verify a Vercel-authenticated runtime write after keyless federation is
-  connected. The current synthetic write used the project owner's authenticated
-  Cloud Shell; no service-account credential was created for testing.
+- [x] A production Vercel request wrote a contract-conformant event through
+  keyless federation using the production runtime identity; no service-account
+  credential was created for testing.
 - Owner and individually approved engineers can query the view; other test
   identities cannot.
-- Each relevant synthetic FastAPI request produces exactly one event.
-- Success, 401, validation error, provider failure, and missing/invalid IP cases
-  map to the expected allowlisted values.
-- A negative search/export check finds none of the forbidden fields or values.
+- [x] Local request-contract tests cover one-event-per-request behavior for both
+  relevant endpoints and the supported outcome/IP mappings.
+- [x] Production 401 smoke produced an `access_verify` event with the expected
+  allowlisted fields and did not change the business response.
+- [x] Negative code tests and production payload inspection found none of the
+  forbidden fields or values.
 - Day-eight queries cannot return day-one events. Physical purge timing remains
   eventually consistent per the approved decision.

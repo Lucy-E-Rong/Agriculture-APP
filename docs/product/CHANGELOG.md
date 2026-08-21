@@ -4,17 +4,19 @@ This is the product-level changelog. Git history remains the code-level record.
 
 ## Unreleased
 
-### Product operations
+### 0.2.0 candidate — implemented and deployed, acceptance pending
 
-- Added a five-role team structure and shared product-memory design.
-- Documented current implemented, scaffolded, and placeholder behavior.
-- Recorded approved future requirements for dynamic Recent Scans and a seven-day
-  rolling access/API audit record.
-
-### Local code change awaiting normal release handling
-
-- Dashboard sample-data notice has been removed locally but is not included in a
-  team-setup commit or deployment.
+- Removed the obsolete sample-data notice and its unused English/Chinese copy.
+- Replaced Recent Scans mock data with the newest 10 successfully persisted Demo
+  scans, with full detail reopening.
+- Added private Supabase image/result persistence with compensation on partial
+  failure and Demo-specific deletion boundaries.
+- Added minimized FastAPI access and scan-analysis audit events written through
+  keyless Vercel OIDC/GCP Workload Identity Federation to a dedicated seven-day
+  Cloud Logging bucket.
+- Deployed the FastAPI backend and Expo Web candidate to Vercel Production and
+  completed non-sensitive technical smoke checks. User acceptance is pending, so
+  this candidate is not yet a released or validated version.
 
 ## 0.1.0 — Personal independent demo
 
