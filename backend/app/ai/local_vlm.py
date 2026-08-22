@@ -30,6 +30,7 @@ class LocalVlmProvider(AiProviderClient):
                 "detected_issues": "string[]",
                 "recommendations": "string[]",
                 "needs_human_review": "boolean",
+                "human_review_reasons": "string[]; empty when needs_human_review is false",
             },
         }
 
@@ -37,4 +38,3 @@ class LocalVlmProvider(AiProviderClient):
             response = await client.post(self.settings.local_vlm_url, json=payload, headers=headers)
             response.raise_for_status()
             return AnalyzeScanResponse.model_validate(response.json())
-

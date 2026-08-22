@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ActivityIndicator, Image, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, StyleSheet, TextInput, View } from "react-native";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { AppText } from "@/components/AppText";
@@ -8,13 +8,24 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { ScanAnalysisResult } from "@/components/ScanAnalysisResult";
 import { Screen } from "@/components/Screen";
 import { colors } from "@/constants/colors";
-import { analyzeScan, PersistedAnalyzeScanResult } from "@/lib/api";
+import { analyzeScan, PersistedAnalyzeScanResult, ScanLocationSnapshot } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { useAppStore } from "@/store/appStore";
 
 const MAX_IMAGE_DIMENSION = 1600;
 const FALLBACK_IMAGE_DIMENSION = 1200;
 const SAFE_BASE64_LENGTH = 3_500_000;
+type ContextField = Exclude<keyof ScanLocationSnapshot, "display">;
+const EMPTY_CONTEXT: Record<ContextField, string> = {
+  greenhouse: "",
+  section: "",
+  table: "",
+  row: "",
+  plant_id: "",
+  sample_id: "",
+  variety: "",
+  growth_stage: ""
+};
 
 async function compressImage(
   uri: string,
@@ -54,6 +65,7 @@ export default function ScanScreen() {
   const [preparingImage, setPreparingImage] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
+  const [scanContext, setScanContext] = useState(EMPTY_CONTEXT);
 
   async function pickImage() {
     const picked = await ImagePicker.launchImageLibraryAsync({
@@ -113,6 +125,7 @@ export default function ScanScreen() {
     setLoading(true);
     setError(undefined);
     try {
+      const locationSnapshot = buildLocationSnapshot(scanContext);
       const response = await analyzeScan({
         accessCode,
         imageBase64,
@@ -120,18 +133,7 @@ export default function ScanScreen() {
         imageMimeType,
         provider: aiProvider,
         language,
-        cropId: "crop-1",
-        greenhouseId: "gh-1",
-        sectionId: "sec-a",
-        tableId: "table-1",
-        rowId: "row-1",
-        locationSnapshot: {
-          display: "GH1 · SA · T1 · R1",
-          greenhouse: "Greenhouse 1",
-          section: "Section A",
-          table: "Table 1",
-          row: "Row 1 · Romaine"
-        }
+        ...(Object.keys(locationSnapshot).length ? { locationSnapshot } : {})
       });
       setResult(response);
     } catch (scanError) {
@@ -146,7 +148,7 @@ export default function ScanScreen() {
     <Screen>
       <View>
         <AppText variant="title">{t(language, "scan")}</AppText>
-        <AppText variant="caption">{t(language, "locationPicker")}: GH1 · SA · T1 · R1</AppText>
+        <AppText variant="caption">{t(language, "scanContextOptional")}</AppText>
       </View>
 
       <Card style={styles.providerCard}>
@@ -166,11 +168,21 @@ export default function ScanScreen() {
       </Card>
 
       <Card style={styles.locationCard}>
-        <Field label={t(language, "greenhouse")} value="Greenhouse 1" />
-        <Field label={t(language, "section")} value="Section A" />
-        <Field label={t(language, "table")} value="Table 1" />
-        <Field label={t(language, "row")} value="Row 1 · Romaine" />
+        <AppText variant="subtitle">{t(language, "scanContext")}</AppText>
+        <AppText variant="caption">{t(language, "scanContextHint")}</AppText>
+        <View style={styles.contextGrid}>
+          <ContextInput label={t(language, "greenhouse")} value={scanContext.greenhouse} onChangeText={(value) => updateContext("greenhouse", value)} />
+          <ContextInput label={t(language, "section")} value={scanContext.section} onChangeText={(value) => updateContext("section", value)} />
+          <ContextInput label={t(language, "table")} value={scanContext.table} onChangeText={(value) => updateContext("table", value)} />
+          <ContextInput label={t(language, "row")} value={scanContext.row} onChangeText={(value) => updateContext("row", value)} />
+          <ContextInput label={t(language, "plantId")} value={scanContext.plant_id} onChangeText={(value) => updateContext("plant_id", value)} />
+          <ContextInput label={t(language, "sampleId")} value={scanContext.sample_id} onChangeText={(value) => updateContext("sample_id", value)} />
+          <ContextInput label={t(language, "variety")} value={scanContext.variety} onChangeText={(value) => updateContext("variety", value)} />
+          <ContextInput label={t(language, "growthStage")} value={scanContext.growth_stage} onChangeText={(value) => updateContext("growth_stage", value)} />
+        </View>
       </Card>
+
+      <EnvironmentalDataDemo language={language} />
 
       <Card style={styles.imageCard}>
         {imageUri ? (
@@ -193,6 +205,10 @@ export default function ScanScreen() {
       {result ? <ScanAnalysisResult result={result} language={language} /> : null}
     </Screen>
   );
+
+  function updateContext(field: ContextField, value: string) {
+    setScanContext((current) => ({ ...current, [field]: value }));
+  }
 }
 
 function ProviderButton({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
@@ -203,13 +219,58 @@ function ProviderButton({ label, active, onPress }: { label: string; active: boo
   );
 }
 
-function Field({ label, value }: { label: string; value: string }) {
+function ContextInput({ label, value, onChangeText }: { label: string; value: string; onChangeText: (value: string) => void }) {
   return (
     <View style={styles.field}>
       <AppText variant="label">{label}</AppText>
-      <AppText>{value}</AppText>
+      <TextInput
+        accessibilityLabel={label}
+        maxLength={120}
+        onChangeText={onChangeText}
+        style={styles.input}
+        value={value}
+      />
     </View>
   );
+}
+
+function EnvironmentalDataDemo({ language }: { language: "en" | "zh" }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <Card style={styles.environmentCard}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+        onPress={() => setExpanded((value) => !value)}
+        style={styles.environmentHeader}
+      >
+        <View style={styles.environmentTitle}>
+          <AppText variant="subtitle">{t(language, "environmentalData")}</AppText>
+          <AppText variant="caption">{t(language, "demo")} · {t(language, "notConnected")}</AppText>
+        </View>
+        <AppText>{expanded ? "−" : "+"}</AppText>
+      </Pressable>
+      {expanded ? (
+        <View style={styles.environmentValues}>
+          <AppText variant="caption">{t(language, "environmentalDemoHint")}</AppText>
+          <AppText>{t(language, "demoAirTemperature")}</AppText>
+          <AppText>{t(language, "demoHumidity")}</AppText>
+          <AppText>{t(language, "demoRootZoneMoisture")}</AppText>
+        </View>
+      ) : null}
+    </Card>
+  );
+}
+
+function buildLocationSnapshot(context: Record<ContextField, string>): ScanLocationSnapshot {
+  const snapshot = Object.fromEntries(
+    Object.entries(context)
+      .map(([key, value]) => [key, value.trim()])
+      .filter(([, value]) => value.length > 0)
+  ) as ScanLocationSnapshot;
+  const displayParts = [snapshot.greenhouse, snapshot.section, snapshot.table, snapshot.row].filter(Boolean);
+  if (displayParts.length) snapshot.display = displayParts.join(" · ");
+  return snapshot;
 }
 
 const styles = StyleSheet.create({
@@ -245,8 +306,40 @@ const styles = StyleSheet.create({
   locationCard: {
     gap: 10
   },
+  contextGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10
+  },
   field: {
-    gap: 3
+    flexBasis: 220,
+    flexGrow: 1,
+    gap: 4
+  },
+  input: {
+    minHeight: 42,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.cream,
+    color: colors.textPrimary,
+    paddingHorizontal: 10,
+    paddingVertical: 8
+  },
+  environmentCard: {
+    gap: 10
+  },
+  environmentHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  environmentTitle: {
+    gap: 2
+  },
+  environmentValues: {
+    gap: 7,
+    paddingTop: 4
   },
   imageCard: {
     gap: 12

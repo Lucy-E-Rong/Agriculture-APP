@@ -87,6 +87,27 @@ handoff instead of silently taking ownership.
   concurrent edits to the same canonical file.
 - Do not commit or include unrelated pre-existing changes.
 
+## Standing-task delegation
+
+- The named FarmScout roles refer to the user's existing, visible standing Codex
+  tasks: Product Manager, UX Designer, Full-stack Engineer, AI/VLM Engineer, and
+  Data Engineer.
+- When the user asks the Product Manager to notify, assign, distribute, or discuss
+  work with one of these roles, send the work to the corresponding existing
+  standing task. The user must be able to see the assignment and follow-up in that
+  task's conversation.
+- Do not substitute hidden sub-agents for a standing role. Do not create a new
+  same-role task, fork a task, move a task to another checkout/worktree, or create
+  a worktree on the role's behalf unless the user explicitly asks for that exact
+  action.
+- Before sending work, inspect the existing standing tasks and use their current
+  task identifiers. If a standing task is archived, restore that same task rather
+  than creating a replacement.
+- Because the standing tasks normally share the Agriculture-APP checkout, the
+  Product Manager must serialize writes: explicitly name the single current
+  writer, keep the other roles read-only, and notify the next role only after the
+  current writer has paused or completed.
+
 ## Product memory and handoffs
 
 - The Product Manager owns canonical updates to `PROJECT_STATUS.md`,

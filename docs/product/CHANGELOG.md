@@ -4,8 +4,17 @@ This is the product-level changelog. Git history remains the code-level record.
 
 ## Unreleased
 
-- Begin `0.3.0` product discussion around severity presentation and structured
-  Prompt consistency. No broader Prompt changes are approved yet.
+- Implement the local `0.3.0` candidate for early visible water-stress assessment
+  in greenhouse lettuce.
+- Add fixed Severity mapping and explanations, retain Visible signs, focus
+  Possible stress sources and Recommendations, and show Human review reasons only
+  when review is triggered.
+- Rename the result to Water Stress Assessment and remove front-end Confidence
+  while keeping backend/history compatibility.
+- Replace the fixed scan-location example with persisted optional Scan Context.
+- Add an explicitly front-end-only Environmental Data Demo; no sensor data is
+  connected, sent, or stored.
+- Remove the proposed per-plant timeline from this version.
 
 ## 0.2.0 — Validated personal Demo release (2026-08-22)
 

@@ -7,10 +7,37 @@ import { StressBadge } from "@/components/StressBadge";
 import { colors } from "@/constants/colors";
 
 export function ScanAnalysisResult({ result, language }: { result: AnalyzeScanResult; language: Language }) {
+  const healthy =
+    result.severity_score === 0 &&
+    result.image_quality.usable &&
+    result.crop_is_lettuce &&
+    result.observed_symptoms.length === 0 &&
+    result.detected_issues.length === 0;
+  const levelKey = {
+    none: "stressNone",
+    low: "stressLow",
+    medium: "stressMedium",
+    high: "stressHigh",
+    critical: "stressCritical"
+  }[result.stress_level] as "stressNone" | "stressLow" | "stressMedium" | "stressHigh" | "stressCritical";
+  const explanationKey = {
+    none: "severityNoneExplanation",
+    low: "severityLowExplanation",
+    medium: "severityMediumExplanation",
+    high: "severityHighExplanation",
+    critical: "severityCriticalExplanation"
+  }[result.stress_level] as
+    | "severityNoneExplanation"
+    | "severityLowExplanation"
+    | "severityMediumExplanation"
+    | "severityHighExplanation"
+    | "severityCriticalExplanation";
+  const reviewReasons = result.human_review_reasons ?? [];
+
   return (
     <Card style={styles.card}>
       <View style={styles.header}>
-        <AppText variant="subtitle">{t(language, "diagnosis")}</AppText>
+        <AppText variant="subtitle">{t(language, "waterStressAssessment")}</AppText>
         <StressBadge level={result.stress_level} language={language} />
       </View>
       {!result.image_quality.usable ? (
@@ -20,8 +47,16 @@ export function ScanAnalysisResult({ result, language }: { result: AnalyzeScanRe
           {result.image_quality.retake_guidance.map((item) => <AppText key={item}>• {item}</AppText>)}
         </View>
       ) : null}
-      <Field label={t(language, "severity")} value={`${result.severity_score}/5`} />
-      <Field label={t(language, "confidence")} value={`${Math.round(result.confidence * 100)}%`} />
+      <View style={styles.field}>
+        <AppText variant="label">{t(language, "severity")}</AppText>
+        <AppText>{result.severity_score}/5 · {t(language, levelKey)}</AppText>
+        <AppText variant="caption">{t(language, explanationKey)}</AppText>
+      </View>
+      {healthy ? (
+        <AppText style={styles.healthy}>{t(language, "healthy")}</AppText>
+      ) : result.severity_score === 0 ? (
+        <AppText>{t(language, "noClearWaterStress")}</AppText>
+      ) : null}
       <AppText>{result.diagnosis}</AppText>
       {result.observed_symptoms.length ? (
         <View style={styles.section}>
@@ -41,18 +76,24 @@ export function ScanAnalysisResult({ result, language }: { result: AnalyzeScanRe
       ) : null}
       <AppText variant="label">{t(language, "recommendations")}</AppText>
       {result.recommendations.map((item) => <AppText key={item}>• {item}</AppText>)}
-      {result.needs_human_review ? <AppText style={styles.review}>{t(language, "humanReview")}</AppText> : null}
+      {result.needs_human_review ? (
+        <View style={styles.reviewSection}>
+          <AppText style={styles.review}>{t(language, "humanReview")}</AppText>
+          {reviewReasons.map((reason) => (
+            <AppText key={reason}>• {t(language, humanReviewReasonKey(reason))}</AppText>
+          ))}
+        </View>
+      ) : null}
     </Card>
   );
 }
 
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.field}>
-      <AppText variant="label">{label}</AppText>
-      <AppText>{value}</AppText>
-    </View>
-  );
+function humanReviewReasonKey(reason: NonNullable<AnalyzeScanResult["human_review_reasons"]>[number]) {
+  return {
+    high_or_critical_water_stress: "reviewHighStress",
+    non_water_factor_to_rule_out: "reviewNonWaterFactor",
+    ambiguous_visual_evidence: "reviewAmbiguousEvidence"
+  }[reason] as "reviewHighStress" | "reviewNonWaterFactor" | "reviewAmbiguousEvidence";
 }
 
 const styles = StyleSheet.create({
@@ -60,5 +101,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   section: { gap: 7 },
   field: { gap: 3 },
+  healthy: { color: colors.primary, fontWeight: "800" },
+  reviewSection: { gap: 7, paddingTop: 4 },
   review: { color: colors.amberDark, fontWeight: "800" }
 });

@@ -5,8 +5,21 @@ transcripts.
 
 ## Open handoffs
 
-None. `0.2.0` is released and validated. `REQ-006` awaits detailed product/AI/UX
-discussion before implementation handoff.
+Date: 2026-08-23
+Requirement ID: V0.3-REQ-001 through V0.3-REQ-006, V0.3-REQ-008
+From: AI/VLM Engineer, UX Designer, Data Engineer, Full-stack Engineer
+To: Product Manager and user
+Status: implemented locally; technical checks passed
+Approved scope: Greenhouse-lettuce water-stress assessment, result presentation,
+real Scan Context, and front-end-only Environmental Data Demo.
+Evidence/files: Gemini Prompt/schema/validators and tests; Expo result/context/Demo
+components; persistence compatibility; 34 backend tests; Python compilation;
+ESLint; TypeScript; 14-route Expo Web export; `git diff --check`.
+Decisions already made: No Unable state, no confidence-triggered review, no
+timeline, no database migration, no real sensor connection.
+Open questions: User acceptance and production verification after deployment.
+Requested next action: Product owner decides whether to authorize commit, push,
+and deployment; then performs acceptance testing.
 
 ## Completed handoffs
 

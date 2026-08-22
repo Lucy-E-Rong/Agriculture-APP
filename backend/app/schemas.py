@@ -1,12 +1,41 @@
 from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 AiProvider = Literal["gemini", "api_provider", "local_vlm", "mock"]
 Language = Literal["en", "zh"]
 StressLevel = Literal["none", "low", "medium", "high", "critical"]
 CauseLikelihood = Literal["uncertain", "possible", "likely"]
+HumanReviewReason = Literal[
+    "high_or_critical_water_stress",
+    "non_water_factor_to_rule_out",
+    "ambiguous_visual_evidence",
+]
+
+
+class ScanLocationSnapshot(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    display: str | None = Field(default=None, max_length=500)
+    greenhouse: str | None = Field(default=None, max_length=120)
+    section: str | None = Field(default=None, max_length=120)
+    table: str | None = Field(default=None, max_length=120)
+    row: str | None = Field(default=None, max_length=120)
+    plant_id: str | None = Field(default=None, max_length=120)
+    sample_id: str | None = Field(default=None, max_length=120)
+    variety: str | None = Field(default=None, max_length=120)
+    growth_stage: str | None = Field(default=None, max_length=120)
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def trim_optional_strings(cls, value: object) -> object:
+        if value is None:
+            return None
+        if not isinstance(value, str):
+            raise ValueError("scan context values must be strings")
+        trimmed = value.strip()
+        return trimmed or None
 
 
 class ImageQuality(BaseModel):
@@ -38,7 +67,7 @@ class AnalyzeScanRequest(BaseModel):
     section_id: str | None = None
     table_id: str | None = None
     row_id: str | None = None
-    location_snapshot: dict[str, Any] = Field(default_factory=dict)
+    location_snapshot: ScanLocationSnapshot = Field(default_factory=ScanLocationSnapshot)
 
     @model_validator(mode="before")
     @classmethod
@@ -77,6 +106,15 @@ class AnalyzeScanResponse(BaseModel):
     detected_issues: list[str]
     recommendations: list[str]
     needs_human_review: bool
+    human_review_reasons: list[HumanReviewReason] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_human_review_shape(self) -> "AnalyzeScanResponse":
+        if not self.needs_human_review and self.human_review_reasons:
+            raise ValueError("human_review_reasons must be empty when human review is false")
+        if len(self.human_review_reasons) != len(set(self.human_review_reasons)):
+            raise ValueError("human_review_reasons must not contain duplicates")
+        return self
 
 
 class PersistedAnalyzeScanResponse(AnalyzeScanResponse):

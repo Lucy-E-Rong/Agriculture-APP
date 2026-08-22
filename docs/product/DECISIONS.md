@@ -86,3 +86,34 @@
 - Authorization boundary: Local code changes and the approved Cloud Logging
   resource/IAM setup are authorized. Commit, push, and deployment still require
   separate user authorization.
+
+## DEC-008 — `0.3.0` greenhouse-lettuce water-stress assessment boundary
+
+- Date: 2026-08-23
+- Status: approved and implemented locally
+- Decision: Focus the Demo assessment on early visible water stress in greenhouse
+  lettuce. Preserve `Visible signs`, `Possible stress sources`, and
+  `Recommendations`, but separate direct observations from water-related sources
+  and evidenced non-water factors that require confirmation.
+- Severity: Use `0 none`, `1 low`, `2 low`, `3 medium`, `4 high`, `5 critical`.
+  Show Healthy only for a usable lettuce image with no visible water-stress or
+  other abnormality.
+- Safety: Do not introduce an Unable/unknown/null Severity state. Unusable and
+  non-lettuce images use retake/change-image gates and do not trigger Human review
+  solely for that reason. Confidence thresholds do not trigger Human review.
+- Human review: The UI is absent when false. When true, it shows structured
+  reasons limited to high/critical water stress, an evidenced non-water factor to
+  rule out, or genuinely ambiguous visible evidence.
+
+## DEC-009 — `0.3.0` context and demonstration boundaries
+
+- Date: 2026-08-23
+- Status: approved and implemented locally
+- Decision: Replace the fixed scan-location example with optional per-scan text
+  context stored in `location_snapshot`; do not create location UUID links from
+  free text or add a per-plant timeline in this version.
+- Environmental Data: Provide only a clearly labelled, collapsed front-end Demo
+  in `0.3.0`. Demo values cannot enter requests, prompts, persistence, audit logs,
+  or recommendations. Real sensor integration requires a later approved design.
+- Compatibility: Hide Confidence only in the front end. Retain the API and
+  database field so existing scan history remains readable.

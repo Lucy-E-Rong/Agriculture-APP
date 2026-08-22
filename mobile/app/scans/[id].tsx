@@ -3,6 +3,7 @@ import { ActivityIndicator, Image, Pressable, StyleSheet, View } from "react-nat
 import { Link, useLocalSearchParams } from "expo-router";
 import { ChevronLeft } from "lucide-react-native";
 import { AppText } from "@/components/AppText";
+import { Card } from "@/components/Card";
 import { ScanAnalysisResult } from "@/components/ScanAnalysisResult";
 import { Screen } from "@/components/Screen";
 import { colors } from "@/constants/colors";
@@ -49,7 +50,7 @@ export default function ScanDetailScreen() {
         </Link>
         <View style={styles.headerText}>
           <AppText variant="title">{t(language, "scanDetails")}</AppText>
-          {detail ? <AppText variant="caption">{detail.location_snapshot.display ?? t(language, "unknown")}</AppText> : null}
+          {detail?.location_snapshot.display ? <AppText variant="caption">{detail.location_snapshot.display}</AppText> : null}
         </View>
       </View>
 
@@ -58,6 +59,7 @@ export default function ScanDetailScreen() {
       {detail ? (
         <>
           <Image source={{ uri: detail.image_url }} style={styles.image} resizeMode="cover" />
+          <ScanContextDetail snapshot={detail.location_snapshot} language={language} />
           <ScanAnalysisResult result={detail.analysis_result} language={language} />
         </>
       ) : null}
@@ -65,9 +67,39 @@ export default function ScanDetailScreen() {
   );
 }
 
+function ScanContextDetail({ snapshot, language }: { snapshot: ScanDetail["location_snapshot"]; language: "en" | "zh" }) {
+  const fields = [
+    ["greenhouse", t(language, "greenhouse")],
+    ["section", t(language, "section")],
+    ["table", t(language, "table")],
+    ["row", t(language, "row")],
+    ["plant_id", t(language, "plantId")],
+    ["sample_id", t(language, "sampleId")],
+    ["variety", t(language, "variety")],
+    ["growth_stage", t(language, "growthStage")]
+  ] as const;
+  const present = fields.filter(([key]) => snapshot[key]);
+  if (!snapshot.display && !present.length) return null;
+
+  return (
+    <Card style={styles.contextCard}>
+      <AppText variant="subtitle">{t(language, "scanContext")}</AppText>
+      {snapshot.display ? <AppText>{snapshot.display}</AppText> : null}
+      {present.map(([key, label]) => (
+        <View key={key} style={styles.contextField}>
+          <AppText variant="label">{label}</AppText>
+          <AppText>{snapshot[key]}</AppText>
+        </View>
+      ))}
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", gap: 12 },
   headerText: { flex: 1, gap: 2 },
+  contextCard: { gap: 10 },
+  contextField: { gap: 3 },
   backButton: {
     width: 42,
     height: 42,

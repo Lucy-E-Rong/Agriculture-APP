@@ -17,11 +17,16 @@ class MockProvider(AiProviderClient):
                     {"type": "leaf_discoloration", "location": "outer leaves", "description": "外层叶片可见轻微黄化。"}
                 ],
                 possible_causes=[
-                    {"category": "water_or_nutrient_stress", "likelihood": "possible", "reason": "仅凭图片无法区分，需要现场检查。"}
+                    {
+                        "category": "irrigation_delivery_to_check",
+                        "likelihood": "possible",
+                        "reason": "可见轻微黄化，但仅凭图片不能确认供水状态，需要现场检查。",
+                    }
                 ],
                 detected_issues=["sample_result", "moderate_stress"],
-                recommendations=["检查该 row 的灌溉状态", "复查 EC 和 pH", "24 小时内再次扫描"],
-                needs_human_review=True,
+                recommendations=["检查该 row 的灌溉供水是否均匀", "查看可用的温室记录", "24 小时内再次扫描"],
+                needs_human_review=False,
+                human_review_reasons=[],
             )
 
         return AnalyzeScanResponse(
@@ -36,9 +41,14 @@ class MockProvider(AiProviderClient):
                 {"type": "leaf_discoloration", "location": "outer leaves", "description": "Mild yellowing is visible on outer leaves."}
             ],
             possible_causes=[
-                {"category": "water_or_nutrient_stress", "likelihood": "possible", "reason": "The image alone cannot distinguish the cause; field checks are needed."}
+                {
+                    "category": "irrigation_delivery_to_check",
+                    "likelihood": "possible",
+                    "reason": "Mild yellowing is visible, but the image cannot confirm water delivery; a field check is needed.",
+                }
             ],
             detected_issues=["sample_result", "moderate_stress"],
-            recommendations=["Check irrigation for this row", "Review EC and pH readings", "Scan again within 24 hours"],
-            needs_human_review=True,
+            recommendations=["Check whether irrigation delivery is even in this row", "Review available greenhouse records", "Scan again within 24 hours"],
+            needs_human_review=False,
+            human_review_reasons=[],
         )

@@ -1,6 +1,6 @@
 # Project Status
 
-Last reviewed: 2026-08-22
+Last reviewed: 2026-08-23
 
 ## Current version
 
@@ -52,14 +52,16 @@ seven-day operational access audit.
 - Locations hierarchy and greenhouse/section/table/row records.
 - Reports charts, risk rows, and scan lists.
 - Workspace name/domain and prompt-settings explanation in Settings.
-- Scan location context is fixed to `GH1 · SA · T1 · R1` rather than chosen by the
-  user.
+- Environmental Data is an explicitly labelled front-end Demo and is not a real
+  sensor connection.
 
 ## Known current limitations
 
 - In-memory settings are still lost on refresh or restart.
 - There is no user identity, organization account, real crop/location management,
   database-backed reporting, or user-facing audit-log viewer.
+- Scan Context is a per-scan text snapshot, not a validated location hierarchy or
+  per-plant timeline.
 - The web analytics view does not identify a person and may not contain the
   application-level API details needed by the product.
 - The current backend converts provider failures into an HTTP 502 response.
@@ -68,7 +70,14 @@ seven-day operational access audit.
 
 ## Next version
 
-`0.3.0` is the next personal-demo iteration. Its first approved requirement is
-to define a fixed severity-score/water-stress-level mapping and show the level
-beside `x/5` in the UI. Broader Prompt and structure-consistency work remains
-proposed pending product discussion.
+`0.3.0` is implemented locally and technically verified but is not committed,
+deployed, released, or user-validated.
+
+The candidate focuses FarmScout on early visible water-stress assessment for
+greenhouse lettuce. It adds the fixed Severity mapping and explanation, focused
+Prompt/source/recommendation rules, conditional human-review reasons, real Scan
+Context input, and a clearly labelled front-end-only Environmental Data Demo.
+
+Technical evidence: 34 backend tests, Python compilation, ESLint, TypeScript,
+Expo Web export for 14 routes, `git diff --check`, fixed-location residue search,
+and front-end Confidence-rendering residue search all passed.

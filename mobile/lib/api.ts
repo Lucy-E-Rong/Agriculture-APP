@@ -14,6 +14,23 @@ export async function verifyAccessCode(accessCode: string): Promise<void> {
   }
 }
 
+export type ScanLocationSnapshot = {
+  display?: string;
+  greenhouse?: string;
+  section?: string;
+  table?: string;
+  row?: string;
+  plant_id?: string;
+  sample_id?: string;
+  variety?: string;
+  growth_stage?: string;
+};
+
+export type HumanReviewReason =
+  | "high_or_critical_water_stress"
+  | "non_water_factor_to_rule_out"
+  | "ambiguous_visual_evidence";
+
 export type AnalyzeScanInput = {
   accessCode: string;
   imageBase64?: string;
@@ -26,7 +43,7 @@ export type AnalyzeScanInput = {
   sectionId?: string;
   tableId?: string;
   rowId?: string;
-  locationSnapshot?: Record<string, string>;
+  locationSnapshot?: ScanLocationSnapshot;
 };
 
 export type AnalyzeScanResult = {
@@ -55,6 +72,7 @@ export type AnalyzeScanResult = {
   detected_issues: string[];
   recommendations: string[];
   needs_human_review: boolean;
+  human_review_reasons?: HumanReviewReason[];
 };
 
 export type PersistedAnalyzeScanResult = AnalyzeScanResult & {
@@ -69,7 +87,7 @@ export type RecentScan = {
   severity_score: number;
   confidence: number;
   diagnosis: string;
-  location_snapshot: Record<string, string>;
+  location_snapshot: ScanLocationSnapshot;
 };
 
 export type ScanDetail = RecentScan & {

@@ -11,7 +11,7 @@ type Props = {
 };
 
 export function StressBadge({ level, language }: Props) {
-  const normalized = level === "critical" ? "high" : level;
+  const normalized = level;
   const label =
     normalized === "low"
       ? t(language, "stressLow")
@@ -19,10 +19,12 @@ export function StressBadge({ level, language }: Props) {
         ? t(language, "stressMedium")
         : normalized === "high"
           ? t(language, "stressHigh")
+          : normalized === "critical"
+            ? t(language, "stressCritical")
           : t(language, "stressNone");
 
   return (
-    <View style={[styles.badge, styles[normalized as "none" | "low" | "medium" | "high"] ?? styles.none]}>
+    <View style={[styles.badge, styles[normalized as "none" | "low" | "medium" | "high" | "critical"] ?? styles.none]}>
       <AppText variant="caption" style={[styles.text, styles[`${normalized}Text` as keyof typeof styles]]}>
         {label}
       </AppText>
@@ -52,6 +54,9 @@ const styles = StyleSheet.create({
   high: {
     backgroundColor: "#FDEAEA"
   },
+  critical: {
+    backgroundColor: "#F8D7DA"
+  },
   noneText: {
     color: colors.primary
   },
@@ -63,6 +68,8 @@ const styles = StyleSheet.create({
   },
   highText: {
     color: colors.danger
+  },
+  criticalText: {
+    color: colors.danger
   }
 });
-

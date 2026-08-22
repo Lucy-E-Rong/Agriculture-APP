@@ -30,13 +30,14 @@ or their team has completed the intended acceptance testing.
 
 ### Next candidate: `0.3.0`
 
-- Fixed severity-score/water-stress-level mapping and explicit level display
-  beside `x/5` (`REQ-006`, approved; detailed presentation pending).
-- Prompt and structured-output consistency improvements (proposed; scope and
-  acceptance criteria pending user approval).
-- Optional structure-regression evaluation using authorized unlabelled images;
-  not a diagnostic-accuracy claim (proposed).
+- Locally implemented and technically verified; commit, deployment, release, and
+  user acceptance remain pending.
+- Focuses the assessment on early visible water stress in greenhouse lettuce.
+- Adds fixed Severity mapping/explanations, evidence-aware Possible stress
+  sources and Recommendations, conditional human-review reasons, real per-scan
+  context, and an explicitly front-end-only Environmental Data Demo.
+- Removes front-end Confidence while retaining backend/history compatibility.
 
-The broader `0.3.0` package remains a candidate until the user approves each
-requirement. The approximately 200 unlabelled images are not an implementation
-dependency and will not be treated as training or diagnostic evaluation data.
+The approximately 200 unlabelled images are not an implementation dependency and
+will not be treated as training or diagnostic-evaluation data. The proposed
+per-plant dated timeline was removed from this version.

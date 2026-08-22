@@ -92,7 +92,7 @@ class SupabaseScanStore:
             "data_purpose": "user_upload",
             "image_mime_type": "image/jpeg",
             "image_size_bytes": len(image_bytes),
-            "location_snapshot": request.location_snapshot,
+            "location_snapshot": request.location_snapshot.model_dump(exclude_none=True),
             "analysis_result": analysis_json,
             "analysis_schema_version": "1",
             "model_name": model_name,

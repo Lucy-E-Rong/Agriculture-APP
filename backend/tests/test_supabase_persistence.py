@@ -20,7 +20,11 @@ def analysis() -> AnalyzeScanResponse:
         severity_score=3,
         confidence=0.74,
         diagnosis="Visible stress",
-        observed_symptoms=[],
+        observed_symptoms=[{
+            "type": "wilting",
+            "location": "outer_leaves",
+            "description": "Visible loss of turgor on outer leaves.",
+        }],
         possible_causes=[],
         detected_issues=["yellowing"],
         recommendations=["Inspect irrigation"],
@@ -68,6 +72,7 @@ class SupabaseScanStoreTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(row["status"], "succeeded")
         self.assertEqual(row["data_stage"], "demo")
         self.assertEqual(row["data_purpose"], "user_upload")
+        self.assertEqual(row["location_snapshot"], {"display": "GH1 · SA · T1 · R1"})
         self.assertEqual(seen[0].headers["apikey"], "sb_secret_test")
         self.assertNotIn("authorization", seen[0].headers)
 

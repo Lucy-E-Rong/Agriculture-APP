@@ -88,7 +88,7 @@ Return exactly this JSON shape:
   "diagnosis": "string",
   "detected_issues": ["string"],
   "recommendations": ["string"],
-  "needs_human_review": false
+  "needs_human_review": false,
+  "human_review_reasons": []
 }}
 """.strip()
-
