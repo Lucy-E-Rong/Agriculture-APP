@@ -31,7 +31,7 @@ that future tasks should rely on.
 ## Current snapshot
 
 - Product: FarmScout
-- Current version: `0.1.0`
+- Current version: `0.2.0`
 - Stage: personal independent demo
 - Primary crop focus: lettuce
 - Mobile/web client: Expo + React Native + Expo Router

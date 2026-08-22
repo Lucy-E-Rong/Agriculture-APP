@@ -2,7 +2,7 @@ import base64
 import binascii
 from datetime import datetime, timezone
 from typing import Any
-from urllib.parse import quote, urljoin
+from urllib.parse import quote, urljoin, urlsplit
 from uuid import UUID, uuid4
 
 import httpx
@@ -214,7 +214,17 @@ class SupabaseScanStore:
             raise PersistenceError("Signed image URL creation returned invalid data") from exc
         if not signed_path:
             raise PersistenceError("Signed image URL creation returned no URL")
-        return urljoin(f"{self.base_url}/", signed_path.lstrip("/"))
+        if not isinstance(signed_path, str):
+            raise PersistenceError("Signed image URL creation returned invalid data")
+
+        parsed = urlsplit(signed_path)
+        if parsed.scheme and parsed.netloc:
+            return signed_path
+
+        normalized_path = signed_path.lstrip("/")
+        if normalized_path.startswith("object/"):
+            normalized_path = f"storage/v1/{normalized_path}"
+        return urljoin(f"{self.base_url}/", normalized_path)
 
     @staticmethod
     def _raise_for_status(response: httpx.Response, message: str) -> None:

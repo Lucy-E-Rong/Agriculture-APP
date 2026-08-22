@@ -126,7 +126,7 @@ class SupabaseScanStoreTests(unittest.IsolatedAsyncioTestCase):
                 )
             return httpx.Response(
                 200,
-                json={"signedURL": "/storage/v1/object/sign/scan-images/demo/signed.jpg?token=test"},
+                json={"signedURL": "/object/sign/scan-images/demo/signed.jpg?token=test"},
                 request=incoming,
             )
 
@@ -137,6 +137,36 @@ class SupabaseScanStoreTests(unittest.IsolatedAsyncioTestCase):
             detail.image_url,
             "https://project.supabase.co/storage/v1/object/sign/scan-images/demo/signed.jpg?token=test",
         )
+
+    async def test_signed_url_normalization_supports_supabase_response_variants(self) -> None:
+        cases = [
+            (
+                {"signedURL": "/object/sign/scan-images/demo/signed.jpg?token=official"},
+                "https://project.supabase.co/storage/v1/object/sign/scan-images/demo/signed.jpg?token=official",
+            ),
+            (
+                {"signedUrl": "/storage/v1/object/sign/scan-images/demo/signed.jpg?token=prefixed"},
+                "https://project.supabase.co/storage/v1/object/sign/scan-images/demo/signed.jpg?token=prefixed",
+            ),
+            (
+                {"signedURL": "https://cdn.example.test/private.jpg?token=absolute"},
+                "https://cdn.example.test/private.jpg?token=absolute",
+            ),
+        ]
+
+        for payload, expected in cases:
+            with self.subTest(payload=payload):
+                def handler(incoming: httpx.Request) -> httpx.Response:
+                    return httpx.Response(200, json=payload, request=incoming)
+
+                async with httpx.AsyncClient(
+                    transport=httpx.MockTransport(handler)
+                ) as client:
+                    result = await SupabaseScanStore(
+                        self.settings(), client
+                    )._create_signed_url("demo/signed.jpg")
+
+                self.assertEqual(result, expected)
 
 
 if __name__ == "__main__":

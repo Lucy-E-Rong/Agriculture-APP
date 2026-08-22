@@ -14,24 +14,29 @@ or their team has completed the intended acceptance testing.
 
 ## Near-term sequence
 
-### Current: `0.1.0`
+### Released: `0.1.0`
 
 - Preserve the working Gemini demo.
 - Document what is real versus placeholder.
 - Establish the five-role workflow and shared product memory.
 
-### Candidate: `0.1.1`
+### Released: `0.2.0`
 
-- Small copy and clarity fixes only.
-- Record the already-started removal of the dashboard sample-data sentence.
+- Removed obsolete sample-data notices.
+- Added persisted Recent Scans and private image/result storage.
+- Added detail reopening and Demo-data deletion boundaries.
+- Added a minimized seven-day operational access audit.
+- `REQ-001` through `REQ-005` are user-validated.
 
-### Candidate: `0.2.0`
+### Next candidate: `0.3.0`
 
-- Dynamic Recent Scans, latest 10 (`REQ-003`, approved).
-- Private image and structured-result persistence (`REQ-005`, approved).
-- Seven-day operational audit record.
-- Clear failure behavior and privacy notes.
+- Fixed severity-score/water-stress-level mapping and explicit level display
+  beside `x/5` (`REQ-006`, approved; detailed presentation pending).
+- Prompt and structured-output consistency improvements (proposed; scope and
+  acceptance criteria pending user approval).
+- Optional structure-regression evaluation using authorized unlabelled images;
+  not a diagnostic-accuracy claim (proposed).
 
-`REQ-003/005` are approved for implementation. The seven-day operational audit
-record (`REQ-004`) remains outside the active implementation package until its
-cleanup behavior is approved.
+The broader `0.3.0` package remains a candidate until the user approves each
+requirement. The approximately 200 unlabelled images are not an implementation
+dependency and will not be treated as training or diagnostic evaluation data.

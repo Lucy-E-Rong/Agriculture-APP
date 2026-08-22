@@ -5,7 +5,8 @@ transcripts.
 
 ## Open handoffs
 
-None. User acceptance remains pending for the deployed `0.2.0` candidate.
+None. `0.2.0` is released and validated. `REQ-006` awaits detailed product/AI/UX
+discussion before implementation handoff.
 
 ## Completed handoffs
 
@@ -13,12 +14,11 @@ Date: 2026-08-21
 Requirement ID: REQ-002, REQ-003, REQ-004, REQ-005
 From: Full-stack Engineer
 To: Product Manager and user
-Status: implemented and deployed; not validated
+Status: validated and released in `0.2.0`
 Evidence/files: production FastAPI and Expo Web deployments; backend tests;
 Expo lint, TypeScript, and Web export; production health/access/API/Web smoke;
 real Vercel WIF Cloud Logging event; `docs/product/releases/v0.2.0.md`
-Requested next action: User or team performs product acceptance. Product Manager
-marks only accepted requirements `validated` and releases the candidate.
+Requested next action: Complete. Preserve `0.2.0` as the released baseline.
 
 Date: 2026-08-21
 Requirement ID: REQ-003, REQ-005

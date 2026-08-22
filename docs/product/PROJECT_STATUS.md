@@ -1,18 +1,18 @@
 # Project Status
 
-Last reviewed: 2026-08-21
+Last reviewed: 2026-08-22
 
 ## Current version
 
-`0.1.0` — personal independent demo.
+`0.2.0` — released and user-validated personal independent demo.
 
 The demo proves that a user can access the app, choose a crop image, send a
 compressed image to a hosted backend, receive a structured Gemini analysis, and
 view the result on mobile or web.
 
-The `0.2.0` candidate functionality is implemented and deployed for technical
-verification, but it is not released or validated until the user or their team
-completes acceptance testing.
+The user confirmed acceptance of `REQ-001` through `REQ-005` on 2026-08-22. The
+release includes persisted scan history and images, detail reopening, and the
+seven-day operational access audit.
 
 ## Implemented and working
 
@@ -65,5 +65,10 @@ completes acceptance testing.
 - The current backend converts provider failures into an HTTP 502 response.
 - The current UI does not display the full technical error details returned by the
   backend.
-- `REQ-002/003/004/005` are implemented and technically deployed, but none is
-  `validated` until the user or their team completes acceptance testing.
+
+## Next version
+
+`0.3.0` is the next personal-demo iteration. Its first approved requirement is
+to define a fixed severity-score/water-stress-level mapping and show the level
+beside `x/5` in the UI. Broader Prompt and structure-consistency work remains
+proposed pending product discussion.
