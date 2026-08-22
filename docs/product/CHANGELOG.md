@@ -15,6 +15,8 @@ This is the product-level changelog. Git history remains the code-level record.
 - Add an explicitly front-end-only Environmental Data Demo; no sensor data is
   connected, sent, or stored.
 - Remove the proposed per-plant timeline from this version.
+- Deploy the `0.3.0` candidate backend and Web client to the existing Vercel
+  Production services; user validation and GitHub push remain pending.
 
 ## 0.2.0 — Validated personal Demo release (2026-08-22)
 

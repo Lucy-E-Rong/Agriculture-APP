@@ -70,8 +70,9 @@ seven-day operational access audit.
 
 ## Next version
 
-`0.3.0` is implemented locally and technically verified but is not committed,
-deployed, released, or user-validated.
+`0.3.0` is implemented, committed locally, technically verified, and deployed to
+the existing Vercel Production services. GitHub push and user validation remain
+pending, so `0.2.0` remains the latest released and validated version.
 
 The candidate focuses FarmScout on early visible water-stress assessment for
 greenhouse lettuce. It adds the fixed Severity mapping and explanation, focused
@@ -81,3 +82,10 @@ Context input, and a clearly labelled front-end-only Environmental Data Demo.
 Technical evidence: 34 backend tests, Python compilation, ESLint, TypeScript,
 Expo Web export for 14 routes, `git diff --check`, fixed-location residue search,
 and front-end Confidence-rendering residue search all passed.
+
+Production deployments completed 2026-08-23:
+
+- Backend: `dpl_BsmEJBqdiTvk11u2gmzADCA3vVcj` at
+  `https://agriculture-app-green.vercel.app` (`READY`).
+- Web: `dpl_3LStyeRaLVrQMTPYFUfMEzBQK3pC` at
+  `https://farmscout-web-demo.vercel.app` (`READY`).
