@@ -19,3 +19,8 @@ yarn-error.log*
 # Local app env files
 mobile/.env
 backend/.env
+
+# Local image preprocessing environment and generated research dataset
+.venv-dataset/
+dataset/
+/Photos/

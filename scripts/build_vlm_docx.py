@@ -13,8 +13,8 @@ from docx.shared import Inches, Pt, RGBColor
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "docs" / "vlm-dataset-and-model-strategy.zh.md"
-OUT = ROOT / "docs" / "vlm-dataset-and-model-strategy.zh.docx"
+SOURCE = ROOT / "docs" / "archive" / "vlm-dataset-and-model-strategy.zh.md"
+OUT = ROOT / "docs" / "archive" / "vlm-dataset-and-model-strategy.zh.docx"
 
 
 def set_cell_shading(cell, fill: str) -> None:

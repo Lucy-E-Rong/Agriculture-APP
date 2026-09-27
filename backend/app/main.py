@@ -25,7 +25,7 @@ from app.supabase_persistence import PersistenceError, ScanNotFoundError, Supaba
 
 settings = get_settings()
 
-app = FastAPI(title="FarmScout API", version="0.1.0")
+app = FastAPI(title="FarmScout API", version="0.3.0")
 app.state.audit_writer = CloudAuditWriter(settings)
 
 app.add_middleware(

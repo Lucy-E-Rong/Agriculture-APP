@@ -1,5 +1,7 @@
 # VLM 图像数据集采集与模型策略
 
+> 历史规划（2026-05）。本文件保留早期数据与模型路线讨论，不代表当前已实施功能或现行数据集标准。当前产品状态以 `docs/product/PROJECT_STATUS.md` 为准；本地裁切流程以 `scripts/DATASET_CROPPING.md` 为准。
+
 这份文档用于 FarmScout 项目的图像数据采集和模型路线规划。目标读者包括农业实验室同事和 App/AI 工程侧。
 
 农业团队负责定义作物诊断类别、实验设计、专家标注标准。工程团队需要稳定的图片、metadata、labels、交付格式和数据授权，这样 App 才能支持 zero-shot VLM、few-shot examples、Visual RAG、模型评估，以及未来本地小模型训练。

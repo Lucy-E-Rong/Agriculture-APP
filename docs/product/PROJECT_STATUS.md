@@ -1,6 +1,6 @@
 # Project Status
 
-Last reviewed: 2026-08-23
+Last reviewed: 2026-09-28
 
 ## Current version
 
@@ -70,9 +70,10 @@ seven-day operational access audit.
 
 ## Next version
 
-`0.3.0` is implemented, committed locally, technically verified, and deployed to
-the existing Vercel Production services. GitHub push and user validation remain
-pending, so `0.2.0` remains the latest released and validated version.
+`0.3.0` is implemented, technically verified, committed, pushed to
+`origin/codex/v0.3-water-stress`, and deployed to the existing Vercel Production
+services. Product-owner acceptance of the App update remains pending, so `0.2.0`
+remains the latest released and validated version.
 
 The candidate focuses FarmScout on early visible water-stress assessment for
 greenhouse lettuce. It adds the fixed Severity mapping and explanation, focused
@@ -89,3 +90,22 @@ Production deployments completed 2026-08-23:
   `https://agriculture-app-green.vercel.app` (`READY`).
 - Web: `dpl_3LStyeRaLVrQMTPYFUfMEzBQK3pC` at
   `https://farmscout-web-demo.vercel.app` (`READY`).
+
+## Local research image preparation
+
+- The local source collection contains 263 HEIC photos in five Period folders.
+- The full 2026-09-27 cropping run processed all 263 without processing errors
+  and generated 1,956 JPEG candidate crops, four review flags, 940 rejected
+  edge candidates, and 263 annotated previews. Its summary and manifest are in
+  `dataset/run_20260927_195010_509506/`.
+- The 1,956 JPEG crops total 627,163,692 bytes (598.11 MiB). The full run,
+  including previews and manifests, uses about 675 MB on this Mac.
+- The product owner confirmed on 2026-09-28 that visual quality review of this
+  batch is complete and accepted the resulting count. The 70% completeness rule
+  remains a geometric estimate, not an expert instance-segmentation measure.
+- The batch has no expert symptom or water-stress labels, no confirmed plant/time
+  linkage, and no measured before/after Prompt evaluation. It has not been used
+  to train or evaluate the deployed model and is not stored in the App database.
+- `Photos/` and `dataset/` remain local research data outside Git and are not
+  uploaded to the App backend or Supabase. The cropper source and instructions
+  are versioned with the repository.

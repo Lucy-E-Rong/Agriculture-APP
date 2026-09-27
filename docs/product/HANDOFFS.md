@@ -19,10 +19,21 @@ Decisions already made: No Unable state, no confidence-triggered review, no
 timeline, no database migration, no real sensor connection.
 Open questions: Product-owner acceptance of real image analysis, Scan Context
 save/reopen behavior, result presentation, and supported mobile behavior.
-Requested next action: Push the two local commits when GitHub connectivity is
-available, then complete product-owner acceptance testing.
+Requested next action: Complete product-owner acceptance testing; the branch is
+now aligned with `origin/codex/v0.3-water-stress`.
 
 ## Completed handoffs
+
+Date: 2026-09-28
+Requirement ID: Local Milestone 1 image preparation (separate from App 0.3.0)
+From: Data Engineer and product owner
+To: Product Manager
+Status: 263 originals processed; 1,956 crops produced; product owner confirms
+visual quality review complete. No symptom labels or model evaluation.
+Evidence/files: `scripts/crop_dataset.py`, `scripts/DATASET_CROPPING.md`,
+`dataset/run_20260927_195010_509506/summary.json`, and `manifest.csv`.
+Requested next action: Keep the local research batch separate from Demo user
+uploads; define expert labels and evaluation only as a later approved workflow.
 
 Date: 2026-08-21
 Requirement ID: REQ-002, REQ-003, REQ-004, REQ-005

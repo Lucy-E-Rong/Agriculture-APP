@@ -123,7 +123,8 @@ handoff instead of silently taking ownership.
 
 ## Current safety notes
 
-- The current product is a personal independent demo in the `0.1.x` line.
+- The latest user-validated release is the personal Demo `0.2.0`; `0.3.0` is a
+  deployed candidate awaiting product-owner acceptance.
 - Production secrets belong only in deployment environment variables.
 - User-supplied crop images and IP addresses are potentially sensitive data.
   Storage, retention, access, and deletion behavior must be explicit before

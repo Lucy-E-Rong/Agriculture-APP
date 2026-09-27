@@ -1,6 +1,8 @@
 # FarmScout
 
-FarmScout is a cross-platform mobile app for greenhouse crop scouting. The mobile app lets a user select an exact crop location, capture or upload an image, and request an AI analysis from a Python backend. The backend can call either an external AI API provider or a local GPU-hosted VLM.
+FarmScout is an Expo mobile/web demo for early visible water-stress assessment in greenhouse lettuce. A user selects an image, may enter scan context, and receives a structured assessment from a hosted FastAPI backend using the Gemini Developer API. Results and compressed images from successful Demo scans are stored privately and can be reopened from Recent Scans.
+
+`0.2.0` is the latest user-validated release. The `0.3.0` assessment update is implemented and deployed; product-owner acceptance is still pending. The dashboard, crop/location management, reports, and sensor connection are placeholders or demos rather than live product workflows.
 
 ## Architecture
 
@@ -24,18 +26,20 @@ Mobile App
 ## Current Scope
 
 - Default English UI with optional Simplified Chinese.
-- Auth-ready mobile app shell.
+- Demo access-code gate; no individual user accounts.
 - Dashboard, Crops, Scan, Locations, Reports, and Settings screens.
 - Python backend with a single scan analysis endpoint.
-- AI provider abstraction for Gemini, OpenAI/Anthropic, mock responses, and a local VLM.
-- Structured lettuce assessment with crop checks, image-quality gates, visible symptoms, possible causes, and field recommendations.
-- Supabase Postgres schema for organizations, profiles, locations, crops, scans, and AI settings.
+- Gemini is the active deployed provider. Other API, mock, and local VLM adapters are scaffolding.
+- Structured greenhouse-lettuce assessment with image-quality gates, visible signs, fixed water-stress Severity, possible sources, and recommendations.
+- Successful Demo scans use private Supabase Storage and Postgres. Scan Context is a per-scan snapshot; location hierarchy and individual accounts are not live workflows.
 
 ## Project Docs
 
-- [Agriculture lab image dataset requirements](docs/agriculture-lab-dataset-requirements.md)
-- [VLM dataset collection and model strategy](docs/vlm-dataset-and-model-strategy.md)
-- [VLM 图像数据集采集与模型策略（中文）](docs/vlm-dataset-and-model-strategy.zh.md)
+- [Product status, requirements, and decisions](docs/product/README.md)
+- [Local image cropping and quality checks](scripts/DATASET_CROPPING.md)
+- [Historical VLM dataset and model strategy (Chinese)](docs/archive/vlm-dataset-and-model-strategy.zh.md)
+
+The local research image batch contains 263 source photos. A full cropping run produced 1,956 JPEG crops; the product owner reports completing visual quality review. These are not symptom-labelled examples and have not been used for model training or a measured before/after evaluation. The source photos and generated crops stay outside Git.
 
 ## Run Locally
 

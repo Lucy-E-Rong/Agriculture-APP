@@ -2,7 +2,7 @@
 
 ## Version convention
 
-- `0.1.0`: current personal independent demo baseline.
+- `0.1.0`: initial personal independent demo baseline.
 - `0.1.x`: focused corrections that preserve the current product shape.
 - `0.2.x`, `0.3.x`, ...: meaningful personal-demo iterations.
 - `1.x`: expert-group and management-reviewed internal versions.
@@ -30,14 +30,15 @@ or their team has completed the intended acceptance testing.
 
 ### Next candidate: `0.3.0`
 
-- Locally implemented and technically verified; commit, deployment, release, and
-  user acceptance remain pending.
+- Implemented, technically verified, committed, pushed, and deployed; release
+  and product-owner acceptance remain pending.
 - Focuses the assessment on early visible water stress in greenhouse lettuce.
 - Adds fixed Severity mapping/explanations, evidence-aware Possible stress
   sources and Recommendations, conditional human-review reasons, real per-scan
   context, and an explicitly front-end-only Environmental Data Demo.
 - Removes front-end Confidence while retaining backend/history compatibility.
 
-The approximately 200 unlabelled images are not an implementation dependency and
-will not be treated as training or diagnostic-evaluation data. The proposed
+The 263 original research photos and 1,956 quality-reviewed local crops are not
+an App implementation dependency. They lack expert symptom/water-stress labels
+and have not been used for training or diagnostic evaluation. The proposed
 per-plant dated timeline was removed from this version.

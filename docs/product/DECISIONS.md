@@ -39,7 +39,7 @@
 ## DEC-005 — No database for the initial access audit record
 
 - Date: 2026-08-20
-- Status: approved requirement, implementation deferred
+- Status: implemented through DEC-007 and validated REQ-004
 - Decision: The first access/API audit record should be a separate seven-day
   rolling record rather than a database feature.
 - Constraint: The storage mechanism must work in the chosen deployment runtime;
@@ -90,7 +90,8 @@
 ## DEC-008 — `0.3.0` greenhouse-lettuce water-stress assessment boundary
 
 - Date: 2026-08-23
-- Status: approved and implemented locally
+- Status: approved, implemented, and deployed as a `0.3.0` candidate; user
+  acceptance pending
 - Decision: Focus the Demo assessment on early visible water stress in greenhouse
   lettuce. Preserve `Visible signs`, `Possible stress sources`, and
   `Recommendations`, but separate direct observations from water-related sources
@@ -108,7 +109,8 @@
 ## DEC-009 — `0.3.0` context and demonstration boundaries
 
 - Date: 2026-08-23
-- Status: approved and implemented locally
+- Status: approved, implemented, and deployed as a `0.3.0` candidate; user
+  acceptance pending
 - Decision: Replace the fixed scan-location example with optional per-scan text
   context stored in `location_snapshot`; do not create location UUID links from
   free text or add a per-plant timeline in this version.

@@ -39,8 +39,10 @@ Status terms follow the repository `AGENTS.md`.
 - `V0.3-REQ-007` (a dated per-plant scan timeline) was discussed and explicitly
   removed from the version before implementation. Existing `created_at` values
   remain, but no timeline or trend feature was added.
-- The approximately 200 unlabelled images are not a `0.3.0` dependency and are
-  not training or diagnostic-evaluation data.
+- The local research batch now contains 263 original images and 1,956
+  product-owner-reviewed crop outputs. They have no expert symptom or water-stress
+  labels, are not a `0.3.0` App dependency, and are not training or diagnostic
+  evaluation data.
 - IP addresses and crop images are potentially sensitive. Their use must be
   transparent and minimized.
 

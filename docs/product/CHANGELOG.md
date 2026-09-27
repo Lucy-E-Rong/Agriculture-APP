@@ -16,7 +16,18 @@ This is the product-level changelog. Git history remains the code-level record.
   connected, sent, or stored.
 - Remove the proposed per-plant timeline from this version.
 - Deploy the `0.3.0` candidate backend and Web client to the existing Vercel
-  Production services; user validation and GitHub push remain pending.
+  Production services and push its branch; user acceptance remains pending.
+
+## Local research data preparation (2026-09-28)
+
+- Added a local single-plant crop and quality-check workflow with progress,
+  previews, and a manifest. The full batch produced 1,956 JPEG crops from 263
+  original photos; the product owner confirmed visual quality review.
+- Kept this research batch separate from App scan history, model training, and
+  diagnostic evaluation. No symptom labels or quantified Prompt improvement have
+  been established.
+- Archived the May 2026 Chinese VLM strategy as historical planning and removed
+  redundant, outdated English dataset guidance from current project navigation.
 
 ## 0.2.0 — Validated personal Demo release (2026-08-22)
 
