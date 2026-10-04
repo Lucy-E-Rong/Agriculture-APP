@@ -14,7 +14,7 @@ from fastapi import Request
 from app.config import Settings
 
 Action = Literal["access_verify", "scan_analyze"]
-Provider = Literal["gemini", "api_provider", "local_vlm"]
+Provider = Literal["gemini", "prototype", "api_provider", "local_vlm"]
 ProviderOutcome = Literal["succeeded", "failed", "not_called"]
 ErrorCategory = Literal[
     "auth_failed",
@@ -115,6 +115,8 @@ def configure_provider_audit(request: Request, provider: str, settings: Settings
     external_provider: Provider | None = None
     if provider == "gemini":
         external_provider = "gemini"
+    elif provider == "prototype":
+        external_provider = "prototype"
     elif provider == "local_vlm":
         external_provider = "local_vlm"
     elif provider == "api_provider" and (settings.openai_api_key or settings.anthropic_api_key):

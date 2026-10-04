@@ -44,13 +44,20 @@ class GeminiPromptTests(unittest.TestCase):
     def test_prompt_contains_approved_water_stress_protocol(self) -> None:
         prompt = build_prompt(AnalyzeScanRequest(language="zh", row_id="R1"))
         for required_text in (
+            "main red leaf lettuce plant",
             "EARLY VISIBLE signs that are consistent with WATER STRESS",
+            "Loss of turgor or leaf softening",
+            '"No obvious abnormality" is exclusive',
+            "Natural red, purple, burgundy, or dark cultivar pigmentation",
             "0 none, 1-2 low, 3 medium, 4 high",
             "Describe the plant as Healthy only",
             "disease_to_rule_out",
+            "Water-related checks are",
+            "Give 1-3 concise, safe, evidence-linked actions",
             "Never invent sensor values",
             "pesticide or fertilizer doses",
             "human_review_reasons must be an empty array",
+            "Return only JSON matching the supplied schema",
             "row_id: R1",
             "Simplified Chinese",
         ):

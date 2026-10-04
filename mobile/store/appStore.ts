@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { Language } from "@/lib/i18n";
 
-export type AiProvider = "gemini" | "api_provider" | "local_vlm" | "mock";
+export type AiProvider = "gemini" | "prototype" | "api_provider" | "local_vlm" | "mock";
 
 type AppState = {
   language: Language;

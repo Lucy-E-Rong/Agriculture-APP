@@ -76,6 +76,7 @@ function ScanContextDetail({ snapshot, language }: { snapshot: ScanDetail["locat
     ["plant_id", t(language, "plantId")],
     ["sample_id", t(language, "sampleId")],
     ["variety", t(language, "variety")],
+    ["period", t(language, "period")],
     ["growth_stage", t(language, "growthStage")]
   ] as const;
   const present = fields.filter(([key]) => snapshot[key]);

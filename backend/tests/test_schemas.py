@@ -160,6 +160,7 @@ class AnalyzeScanRequestTests(unittest.TestCase):
                 "display": "  Greenhouse A · Section 2  ",
                 "greenhouse": " Greenhouse A ",
                 "plant_id": " plant-17 ",
+                "period": " Day 3, observation 2 ",
                 "sample_id": "",
             }
         })
@@ -170,7 +171,18 @@ class AnalyzeScanRequestTests(unittest.TestCase):
                 "display": "Greenhouse A · Section 2",
                 "greenhouse": "Greenhouse A",
                 "plant_id": "plant-17",
+                "period": "Day 3, observation 2",
             },
+        )
+
+    def test_legacy_growth_stage_remains_readable(self) -> None:
+        request = AnalyzeScanRequest.model_validate({
+            "locationSnapshot": {"growth_stage": "  early heading  "}
+        })
+
+        self.assertEqual(
+            request.location_snapshot.model_dump(exclude_none=True),
+            {"growth_stage": "early heading"},
         )
 
     def test_scan_context_rejects_unknown_keys_non_strings_and_long_values(self) -> None:

@@ -266,6 +266,30 @@ class AuditMiddlewareTests(unittest.TestCase):
         self.assertEqual(writer.events[0].provider_outcome, "failed")
         self.assertEqual(writer.events[0].error_category, "provider_timeout")
 
+    def test_prototype_is_audited_as_an_external_provider(self) -> None:
+        writer = CapturingWriter()
+        app.state.audit_writer = writer
+        with patch("app.main.get_ai_provider", return_value=FakeProvider()), patch(
+            "app.main.SupabaseScanStore", FakeStore
+        ):
+            with self.client() as client:
+                response = client.post(
+                    "/api/scans/analyze",
+                    headers={"X-Demo-Access-Code": "correct-code"},
+                    json={
+                        "imageBase64": "/9j/2Q==",
+                        "imageMimeType": "image/jpeg",
+                        "provider": "prototype",
+                        "language": "en",
+                    },
+                )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(writer.events), 1)
+        self.assertTrue(writer.events[0].external_api_used)
+        self.assertEqual(writer.events[0].provider, "prototype")
+        self.assertEqual(writer.events[0].provider_outcome, "succeeded")
+
     def test_scan_persistence_failure_emits_one_sanitized_category(self) -> None:
         writer = CapturingWriter()
         app.state.audit_writer = writer

@@ -3,7 +3,7 @@ from typing import Any, Literal
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-AiProvider = Literal["gemini", "api_provider", "local_vlm", "mock"]
+AiProvider = Literal["gemini", "prototype", "api_provider", "local_vlm", "mock"]
 Language = Literal["en", "zh"]
 StressLevel = Literal["none", "low", "medium", "high", "critical"]
 CauseLikelihood = Literal["uncertain", "possible", "likely"]
@@ -25,6 +25,8 @@ class ScanLocationSnapshot(BaseModel):
     plant_id: str | None = Field(default=None, max_length=120)
     sample_id: str | None = Field(default=None, max_length=120)
     variety: str | None = Field(default=None, max_length=120)
+    period: str | None = Field(default=None, max_length=120)
+    # Kept for reading and validating 0.3.0-era snapshots.
     growth_stage: str | None = Field(default=None, max_length=120)
 
     @field_validator("*", mode="before")

@@ -92,6 +92,8 @@ async def verify_access(x_demo_access_code: str | None = Header(default=None)) -
 def model_name_for_provider(provider: str) -> str | None:
     if provider == "gemini":
         return settings.gemini_model
+    if provider == "prototype":
+        return settings.gemini_model
     if provider == "local_vlm":
         return settings.local_vlm_url
     if provider == "api_provider":

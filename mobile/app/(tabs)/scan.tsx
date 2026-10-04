@@ -15,7 +15,7 @@ import { useAppStore } from "@/store/appStore";
 const MAX_IMAGE_DIMENSION = 1600;
 const FALLBACK_IMAGE_DIMENSION = 1200;
 const SAFE_BASE64_LENGTH = 3_500_000;
-type ContextField = Exclude<keyof ScanLocationSnapshot, "display">;
+type ContextField = Exclude<keyof ScanLocationSnapshot, "display" | "growth_stage">;
 const EMPTY_CONTEXT: Record<ContextField, string> = {
   greenhouse: "",
   section: "",
@@ -24,7 +24,7 @@ const EMPTY_CONTEXT: Record<ContextField, string> = {
   plant_id: "",
   sample_id: "",
   variety: "",
-  growth_stage: ""
+  period: ""
 };
 
 async function compressImage(
@@ -160,9 +160,9 @@ export default function ScanScreen() {
             onPress={() => setAiProvider("gemini")}
           />
           <ProviderButton
-            label={t(language, "localVlm")}
-            active={aiProvider === "local_vlm"}
-            onPress={() => setAiProvider("local_vlm")}
+            label={t(language, "prototype")}
+            active={aiProvider === "prototype"}
+            onPress={() => setAiProvider("prototype")}
           />
         </View>
       </Card>
@@ -178,7 +178,7 @@ export default function ScanScreen() {
           <ContextInput label={t(language, "plantId")} value={scanContext.plant_id} onChangeText={(value) => updateContext("plant_id", value)} />
           <ContextInput label={t(language, "sampleId")} value={scanContext.sample_id} onChangeText={(value) => updateContext("sample_id", value)} />
           <ContextInput label={t(language, "variety")} value={scanContext.variety} onChangeText={(value) => updateContext("variety", value)} />
-          <ContextInput label={t(language, "growthStage")} value={scanContext.growth_stage} onChangeText={(value) => updateContext("growth_stage", value)} />
+          <ContextInput label={t(language, "period")} value={scanContext.period} onChangeText={(value) => updateContext("period", value)} />
         </View>
       </Card>
 

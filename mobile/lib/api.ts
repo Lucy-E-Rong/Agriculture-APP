@@ -23,6 +23,8 @@ export type ScanLocationSnapshot = {
   plant_id?: string;
   sample_id?: string;
   variety?: string;
+  period?: string;
+  /** Legacy 0.3.0 snapshots only. New scans use period. */
   growth_stage?: string;
 };
 
