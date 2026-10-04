@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,7 +15,10 @@ class Settings(BaseSettings):
     supabase_signed_url_ttl_seconds: int = 300
 
     openai_api_key: str | None = None
-    openai_model: str = "gpt-4o-mini"
+    openai_model: str = Field(
+        default="gpt-5.6-terra",
+        validation_alias=AliasChoices("OPENAI_MODEL", "MODEL"),
+    )
     anthropic_api_key: str | None = None
     anthropic_model: str = "claude-3-5-sonnet-latest"
 
@@ -33,7 +37,11 @@ class Settings(BaseSettings):
     vercel: str | None = None
     vercel_env: str | None = None
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        populate_by_name=True,
+    )
 
 
 @lru_cache

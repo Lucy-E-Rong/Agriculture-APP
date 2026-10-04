@@ -1,6 +1,8 @@
 import base64
 import binascii
 from datetime import datetime, timezone
+import logging
+import re
 from typing import Any
 from urllib.parse import quote, urljoin, urlsplit
 from uuid import UUID, uuid4
@@ -11,10 +13,18 @@ from app.config import Settings
 from app.schemas import (
     AnalyzeScanRequest,
     AnalyzeScanResponse,
+    AnalysisResponse,
+    PersistedAnalysisResponse,
     PersistedAnalyzeScanResponse,
+    PersistedPrototypeAnalysisResponse,
+    PrototypeAnalysisResponse,
     RecentScan,
     ScanDetail,
 )
+
+
+logger = logging.getLogger("farmscout.persistence")
+MAX_ERROR_FIELD_LENGTH = 500
 
 
 class PersistenceError(RuntimeError):
@@ -55,9 +65,9 @@ class SupabaseScanStore:
     async def persist_success(
         self,
         request: AnalyzeScanRequest,
-        analysis: AnalyzeScanResponse,
+        analysis: AnalysisResponse,
         model_name: str | None,
-    ) -> PersistedAnalyzeScanResponse:
+    ) -> PersistedAnalysisResponse:
         if request.image_mime_type != "image/jpeg" or not request.image_base64:
             raise PersistenceError("A compressed JPEG is required for persistence")
         try:
@@ -75,18 +85,11 @@ class SupabaseScanStore:
         await self._upload_image(object_path, image_bytes)
 
         analysis_json = analysis.model_dump(mode="json")
-        row = {
+        row: dict[str, Any] = {
             "id": str(scan_id),
             "image_path": object_path,
             "ai_provider": request.provider,
             "language": request.language,
-            "stress_level": analysis.stress_level,
-            "severity_score": analysis.severity_score,
-            "confidence": analysis.confidence,
-            "diagnosis": analysis.diagnosis,
-            "detected_issues": analysis.detected_issues,
-            "recommendations": analysis.recommendations,
-            "needs_human_review": analysis.needs_human_review,
             "status": "succeeded",
             "data_stage": "demo",
             "data_purpose": "user_upload",
@@ -98,6 +101,16 @@ class SupabaseScanStore:
             "model_name": model_name,
             "created_at": created_at.isoformat(),
         }
+        if isinstance(analysis, AnalyzeScanResponse):
+            row.update({
+                "stress_level": analysis.stress_level,
+                "severity_score": analysis.severity_score,
+                "confidence": analysis.confidence,
+                "diagnosis": analysis.diagnosis,
+                "detected_issues": analysis.detected_issues,
+                "recommendations": analysis.recommendations,
+                "needs_human_review": analysis.needs_human_review,
+            })
         try:
             await self._insert_scan(row)
         except Exception as exc:
@@ -111,10 +124,12 @@ class SupabaseScanStore:
                 raise
             raise PersistenceError("Scan row insert failed") from exc
 
+        if isinstance(analysis, PrototypeAnalysisResponse):
+            return PersistedPrototypeAnalysisResponse(
+                **analysis_json, scan_id=scan_id, created_at=created_at,
+            )
         return PersistedAnalyzeScanResponse(
-            **analysis_json,
-            scan_id=scan_id,
-            created_at=created_at,
+            **analysis_json, scan_id=scan_id, created_at=created_at,
         )
 
     async def list_recent(self, limit: int = 10) -> list[RecentScan]:
@@ -123,7 +138,7 @@ class SupabaseScanStore:
             f"{self.base_url}/rest/v1/scans",
             headers=self._headers(),
             params={
-                "select": "id,created_at,stress_level,severity_score,confidence,diagnosis,location_snapshot",
+                "select": "id,created_at,ai_provider,model_name,stress_level,severity_score,confidence,diagnosis,location_snapshot",
                 "data_stage": "eq.demo",
                 "data_purpose": "eq.user_upload",
                 "status": "eq.succeeded",
@@ -143,7 +158,7 @@ class SupabaseScanStore:
             f"{self.base_url}/rest/v1/scans",
             headers=self._headers(),
             params={
-                "select": "id,created_at,stress_level,severity_score,confidence,diagnosis,location_snapshot,analysis_result,image_path",
+                "select": "id,created_at,ai_provider,model_name,stress_level,severity_score,confidence,diagnosis,location_snapshot,analysis_result,image_path",
                 "id": f"eq.{scan_id}",
                 "data_stage": "eq.demo",
                 "data_purpose": "eq.user_upload",
@@ -226,7 +241,70 @@ class SupabaseScanStore:
             normalized_path = f"storage/v1/{normalized_path}"
         return urljoin(f"{self.base_url}/", normalized_path)
 
-    @staticmethod
-    def _raise_for_status(response: httpx.Response, message: str) -> None:
+    def _raise_for_status(self, response: httpx.Response, message: str) -> None:
         if response.is_error:
-            raise PersistenceError(f"{message} ({response.status_code})")
+            error = self._safe_error_fields(response)
+            logger.error(
+                "%s: status=%s code=%s message=%s details=%s hint=%s",
+                message,
+                response.status_code,
+                error["code"],
+                error["message"],
+                error["details"],
+                error["hint"],
+            )
+            raise PersistenceError(
+                f"{message} (status={response.status_code}, code={error['code']}, "
+                f"message={error['message']}, details={error['details']}, "
+                f"hint={error['hint']})"
+            )
+
+    def _safe_error_fields(self, response: httpx.Response) -> dict[str, str | None]:
+        try:
+            payload = response.json()
+        except ValueError:
+            return {
+                "code": None,
+                "message": "Supabase returned a non-JSON error",
+                "details": self._sanitize_error_value(response.text),
+                "hint": None,
+            }
+        if not isinstance(payload, dict):
+            return {
+                "code": None,
+                "message": "Supabase returned an invalid error object",
+                "details": self._sanitize_error_value(payload),
+                "hint": None,
+            }
+        return {
+            field: self._sanitize_error_value(payload.get(field))
+            for field in ("code", "message", "details", "hint")
+        }
+
+    def _sanitize_error_value(self, value: object) -> str | None:
+        if value is None:
+            return None
+        text = " ".join(str(value).split())
+        lowered = text.lower()
+        if any(marker in lowered for marker in (
+            "failing row contains",
+            "analysis_result",
+            "image_base64",
+        )) or "/9j/" in text:
+            return "[redacted: Supabase error may contain sensitive row data]"
+        if self.api_key:
+            text = text.replace(self.api_key, "[redacted]")
+        text = re.sub(
+            r"(?i)\bauthorization\b\s*[:=]\s*bearer\s+\S+",
+            "Authorization=[redacted]",
+            text,
+        )
+        text = re.sub(
+            r"(?i)\b(authorization|apikey)\b\s*[:=]\s*\S+",
+            r"\1=[redacted]",
+            text,
+        )
+        text = re.sub(r"(?i)\bbearer\s+\S+", "Bearer [redacted]", text)
+        if len(text) > MAX_ERROR_FIELD_LENGTH:
+            return f"{text[:MAX_ERROR_FIELD_LENGTH]}...[truncated]"
+        return text

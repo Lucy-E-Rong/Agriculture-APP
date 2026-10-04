@@ -15,6 +15,7 @@ import { useAppStore } from "@/store/appStore";
 const MAX_IMAGE_DIMENSION = 1600;
 const FALLBACK_IMAGE_DIMENSION = 1200;
 const SAFE_BASE64_LENGTH = 3_500_000;
+const PROTOTYPE_TASK = "Does it show signs of water stress? Tell me what you notice, how severe it looks, and what I should check or do next.";
 type ContextField = Exclude<keyof ScanLocationSnapshot, "display" | "growth_stage">;
 const EMPTY_CONTEXT: Record<ContextField, string> = {
   greenhouse: "",
@@ -56,8 +57,10 @@ async function compressImage(
 export default function ScanScreen() {
   const language = useAppStore((state) => state.language);
   const aiProvider = useAppStore((state) => state.aiProvider);
+  const aiModel = useAppStore((state) => state.aiModel);
   const accessCode = useAppStore((state) => state.accessCode);
   const setAiProvider = useAppStore((state) => state.setAiProvider);
+  const setAiModel = useAppStore((state) => state.setAiModel);
   const [imageUri, setImageUri] = useState<string | undefined>();
   const [imageBase64, setImageBase64] = useState<string | undefined>();
   const [imageMimeType, setImageMimeType] = useState("image/jpeg");
@@ -66,6 +69,7 @@ export default function ScanScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [scanContext, setScanContext] = useState(EMPTY_CONTEXT);
+  const [scanContextExpanded, setScanContextExpanded] = useState(false);
 
   async function pickImage() {
     const picked = await ImagePicker.launchImageLibraryAsync({
@@ -132,6 +136,7 @@ export default function ScanScreen() {
         imageUri,
         imageMimeType,
         provider: aiProvider,
+        modelId: aiModel,
         language,
         ...(Object.keys(locationSnapshot).length ? { locationSnapshot } : {})
       });
@@ -165,12 +170,33 @@ export default function ScanScreen() {
             onPress={() => setAiProvider("prototype")}
           />
         </View>
+        {aiProvider === "prototype" ? (
+          <View style={styles.prototypeQuestion}>
+            <AppText variant="label">{t(language, "prototypeQuestion")}</AppText>
+            <TextInput
+              editable={false}
+              multiline
+              value={PROTOTYPE_TASK}
+              style={styles.questionInput}
+            />
+          </View>
+        ) : null}
+        <AppText variant="label">{t(language, "aiModel")}</AppText>
+        <View style={styles.segmented}>
+          <ProviderButton label={t(language, "geminiModel")} active={aiModel === "gemini-3.6-flash"} onPress={() => setAiModel("gemini-3.6-flash")} />
+          <ProviderButton label={t(language, "openaiModel")} active={aiModel === "gpt-5.6-terra"} onPress={() => setAiModel("gpt-5.6-terra")} />
+        </View>
       </Card>
 
       <Card style={styles.locationCard}>
-        <AppText variant="subtitle">{t(language, "scanContext")}</AppText>
-        <AppText variant="caption">{t(language, "scanContextHint")}</AppText>
-        <View style={styles.contextGrid}>
+        <Pressable accessibilityRole="button" accessibilityState={{ expanded: scanContextExpanded }} onPress={() => setScanContextExpanded((value) => !value)} style={styles.environmentHeader}>
+          <View style={styles.environmentTitle}>
+            <AppText variant="subtitle">{t(language, "scanContext")}</AppText>
+            <AppText variant="caption">{t(language, "scanContextOptional")}</AppText>
+          </View>
+          <AppText>{scanContextExpanded ? "−" : "+"}</AppText>
+        </Pressable>
+        {scanContextExpanded ? <><AppText variant="caption">{t(language, "scanContextHint")}</AppText><View style={styles.contextGrid}>
           <ContextInput label={t(language, "greenhouse")} value={scanContext.greenhouse} onChangeText={(value) => updateContext("greenhouse", value)} />
           <ContextInput label={t(language, "section")} value={scanContext.section} onChangeText={(value) => updateContext("section", value)} />
           <ContextInput label={t(language, "table")} value={scanContext.table} onChangeText={(value) => updateContext("table", value)} />
@@ -179,7 +205,7 @@ export default function ScanScreen() {
           <ContextInput label={t(language, "sampleId")} value={scanContext.sample_id} onChangeText={(value) => updateContext("sample_id", value)} />
           <ContextInput label={t(language, "variety")} value={scanContext.variety} onChangeText={(value) => updateContext("variety", value)} />
           <ContextInput label={t(language, "period")} value={scanContext.period} onChangeText={(value) => updateContext("period", value)} />
-        </View>
+        </View></> : null}
       </Card>
 
       <EnvironmentalDataDemo language={language} />
@@ -202,7 +228,11 @@ export default function ScanScreen() {
         {error ? <AppText variant="caption">{error}</AppText> : null}
       </Card>
 
-      {result ? <ScanAnalysisResult result={result} language={language} /> : null}
+      {result?.response_kind === "prototype" ? (
+        <Card style={styles.prototypeResponse}>
+          <AppText>{result.response_text}</AppText>
+        </Card>
+      ) : result ? <ScanAnalysisResult result={result} language={language} /> : null}
     </Screen>
   );
 
@@ -277,6 +307,18 @@ const styles = StyleSheet.create({
   providerCard: {
     gap: 10
   },
+  prototypeQuestion: { gap: 6, marginTop: 4 },
+  questionInput: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    color: colors.textPrimary,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minHeight: 72
+  },
+  prototypeResponse: { gap: 8 },
   segmented: {
     flexDirection: "row",
     gap: 8

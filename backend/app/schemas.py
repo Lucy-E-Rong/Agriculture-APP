@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 AiProvider = Literal["gemini", "prototype", "api_provider", "local_vlm", "mock"]
+AiModel = Literal["gemini-3.6-flash", "gpt-5.6-terra"]
 Language = Literal["en", "zh"]
 StressLevel = Literal["none", "low", "medium", "high", "critical"]
 CauseLikelihood = Literal["uncertain", "possible", "likely"]
@@ -63,6 +64,7 @@ class AnalyzeScanRequest(BaseModel):
     image_uri: str | None = None
     image_mime_type: str = "image/jpeg"
     provider: AiProvider = "gemini"
+    model_id: AiModel = "gemini-3.6-flash"
     language: Language = "en"
     crop_id: str | None = None
     greenhouse_id: str | None = None
@@ -86,6 +88,7 @@ class AnalyzeScanRequest(BaseModel):
             "tableId": "table_id",
             "rowId": "row_id",
             "locationSnapshot": "location_snapshot",
+            "modelId": "model_id",
         }
         normalized = dict(data)
         for camel_key, snake_key in key_map.items():
@@ -95,6 +98,7 @@ class AnalyzeScanRequest(BaseModel):
 
 
 class AnalyzeScanResponse(BaseModel):
+    response_kind: Literal["farmscout"] = "farmscout"
     crop_is_lettuce: bool = True
     crop_confidence: float = Field(default=1, ge=0, le=1)
     image_quality: ImageQuality = Field(default_factory=ImageQuality)
@@ -124,18 +128,37 @@ class PersistedAnalyzeScanResponse(AnalyzeScanResponse):
     created_at: datetime
 
 
+class PrototypeAnalysisResponse(BaseModel):
+    """An ordinary free-text answer from the unstructured Prototype arm."""
+
+    response_kind: Literal["prototype"] = "prototype"
+    response_text: str = Field(min_length=1)
+
+
+class PersistedPrototypeAnalysisResponse(PrototypeAnalysisResponse):
+    scan_id: UUID
+    created_at: datetime
+
+
+AnalysisResponse = AnalyzeScanResponse | PrototypeAnalysisResponse
+PersistedAnalysisResponse = PersistedAnalyzeScanResponse | PersistedPrototypeAnalysisResponse
+AnalyzeEndpointResponse = PersistedAnalysisResponse | AnalysisResponse
+
+
 class RecentScan(BaseModel):
     id: UUID
     created_at: datetime
-    stress_level: StressLevel
-    severity_score: int = Field(ge=0, le=5)
-    confidence: float = Field(ge=0, le=1)
-    diagnosis: str
+    ai_provider: AiProvider = "gemini"
+    model_name: str | None = None
+    stress_level: StressLevel | None = None
+    severity_score: int | None = Field(default=None, ge=0, le=5)
+    confidence: float | None = Field(default=None, ge=0, le=1)
+    diagnosis: str | None = None
     location_snapshot: dict[str, Any] = Field(default_factory=dict)
 
 
 class ScanDetail(RecentScan):
-    analysis_result: AnalyzeScanResponse
+    analysis_result: AnalysisResponse
     image_url: str
 
 

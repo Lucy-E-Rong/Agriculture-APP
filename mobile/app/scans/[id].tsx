@@ -51,6 +51,7 @@ export default function ScanDetailScreen() {
         <View style={styles.headerText}>
           <AppText variant="title">{t(language, "scanDetails")}</AppText>
           {detail?.location_snapshot.display ? <AppText variant="caption">{detail.location_snapshot.display}</AppText> : null}
+          {detail ? <AppText variant="caption">{detail.ai_provider === "prototype" ? t(language, "prototype") : t(language, "gemini")} · {detail.model_name ?? t(language, "unknown")}</AppText> : null}
         </View>
       </View>
 
@@ -60,7 +61,13 @@ export default function ScanDetailScreen() {
         <>
           <Image source={{ uri: detail.image_url }} style={styles.image} resizeMode="cover" />
           <ScanContextDetail snapshot={detail.location_snapshot} language={language} />
-          <ScanAnalysisResult result={detail.analysis_result} language={language} />
+          {detail.analysis_result.response_kind === "prototype" ? (
+            <Card>
+              <AppText>{detail.analysis_result.response_text}</AppText>
+            </Card>
+          ) : (
+            <ScanAnalysisResult result={detail.analysis_result} language={language} />
+          )}
         </>
       ) : null}
     </Screen>

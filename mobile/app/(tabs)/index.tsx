@@ -85,8 +85,13 @@ export default function DashboardScreen() {
                 <View style={styles.scanText}>
                   <AppText variant="subtitle">{t(language, "lettuceScan")}</AppText>
                   <AppText variant="caption">{scan.location_snapshot.display ?? t(language, "unknown")}</AppText>
+                  <AppText variant="caption">{scan.ai_provider === "prototype" ? t(language, "prototype") : t(language, "gemini")} · {scan.model_name ?? t(language, "unknown")}</AppText>
                 </View>
-                <StressBadge level={scan.stress_level} language={language} />
+                {scan.ai_provider === "prototype" ? (
+                  <AppText variant="caption">{t(language, "prototype")}</AppText>
+                ) : scan.stress_level ? (
+                  <StressBadge level={scan.stress_level} language={language} />
+                ) : null}
               </View>
               <AppText variant="caption">{formatScanTime(scan.created_at, language)}</AppText>
             </Card>

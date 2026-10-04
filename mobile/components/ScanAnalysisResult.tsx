@@ -1,12 +1,12 @@
 import { StyleSheet, View } from "react-native";
-import { AnalyzeScanResult } from "@/lib/api";
+import { FarmScoutAnalyzeScanResult } from "@/lib/api";
 import { Language, t } from "@/lib/i18n";
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
 import { StressBadge } from "@/components/StressBadge";
 import { colors } from "@/constants/colors";
 
-export function ScanAnalysisResult({ result, language }: { result: AnalyzeScanResult; language: Language }) {
+export function ScanAnalysisResult({ result, language }: { result: FarmScoutAnalyzeScanResult; language: Language }) {
   const healthy =
     result.severity_score === 0 &&
     result.image_quality.usable &&
@@ -88,7 +88,7 @@ export function ScanAnalysisResult({ result, language }: { result: AnalyzeScanRe
   );
 }
 
-function humanReviewReasonKey(reason: NonNullable<AnalyzeScanResult["human_review_reasons"]>[number]) {
+function humanReviewReasonKey(reason: NonNullable<FarmScoutAnalyzeScanResult["human_review_reasons"]>[number]) {
   return {
     high_or_critical_water_stress: "reviewHighStress",
     non_water_factor_to_rule_out: "reviewNonWaterFactor",

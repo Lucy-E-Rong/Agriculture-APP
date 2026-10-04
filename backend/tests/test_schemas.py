@@ -154,6 +154,9 @@ class AnalyzeScanResponseTests(unittest.TestCase):
 
 
 class AnalyzeScanRequestTests(unittest.TestCase):
+    def test_model_selection_defaults_to_gemini_and_accepts_camel_case(self) -> None:
+        self.assertEqual(AnalyzeScanRequest().model_id, "gemini-3.6-flash")
+        self.assertEqual(AnalyzeScanRequest.model_validate({"modelId": "gpt-5.6-terra"}).model_id, "gpt-5.6-terra")
     def test_scan_context_trims_and_omits_blank_optional_values(self) -> None:
         request = AnalyzeScanRequest.model_validate({
             "locationSnapshot": {

@@ -111,9 +111,11 @@ def audit_environment(settings: Settings) -> Literal["production", "preview", "d
     return "development"
 
 
-def configure_provider_audit(request: Request, provider: str, settings: Settings) -> None:
+def configure_provider_audit(request: Request, provider: str, model_id: str, settings: Settings) -> None:
     external_provider: Provider | None = None
-    if provider == "gemini":
+    if model_id == "gpt-5.6-terra" and settings.openai_api_key:
+        external_provider = "api_provider"
+    elif provider == "gemini":
         external_provider = "gemini"
     elif provider == "prototype":
         external_provider = "prototype"
@@ -151,7 +153,7 @@ def build_audit_event(
 ) -> AuditEvent:
     client_ip, ip_source = trusted_client_ip(request, settings)
     error_category = getattr(request.state, "audit_error_category", None)
-    if http_status < 400:
+    if http_status < 400 and error_category != "persistence_failed":
         error_category = None
     elif error_category is None:
         if http_status == 401:

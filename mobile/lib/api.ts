@@ -1,4 +1,4 @@
-import { AiProvider } from "@/store/appStore";
+import { AiModel, AiProvider } from "@/store/appStore";
 import { Language } from "@/lib/i18n";
 
 export const API_BASE_URL =
@@ -39,6 +39,7 @@ export type AnalyzeScanInput = {
   imageUri?: string;
   imageMimeType?: string;
   provider: AiProvider;
+  modelId?: AiModel;
   language: Language;
   cropId?: string;
   greenhouseId?: string;
@@ -48,7 +49,8 @@ export type AnalyzeScanInput = {
   locationSnapshot?: ScanLocationSnapshot;
 };
 
-export type AnalyzeScanResult = {
+export type FarmScoutAnalyzeScanResult = {
+  response_kind: "farmscout";
   crop_is_lettuce: boolean;
   crop_confidence: number;
   image_quality: {
@@ -77,18 +79,27 @@ export type AnalyzeScanResult = {
   human_review_reasons?: HumanReviewReason[];
 };
 
+export type PrototypeAnalyzeScanResult = {
+  response_kind: "prototype";
+  response_text: string;
+};
+
+export type AnalyzeScanResult = FarmScoutAnalyzeScanResult | PrototypeAnalyzeScanResult;
+
 export type PersistedAnalyzeScanResult = AnalyzeScanResult & {
-  scan_id: string;
-  created_at: string;
+  scan_id?: string;
+  created_at?: string;
 };
 
 export type RecentScan = {
   id: string;
   created_at: string;
-  stress_level: AnalyzeScanResult["stress_level"];
-  severity_score: number;
-  confidence: number;
-  diagnosis: string;
+  ai_provider: AiProvider;
+  model_name: string | null;
+  stress_level: FarmScoutAnalyzeScanResult["stress_level"] | null;
+  severity_score: number | null;
+  confidence: number | null;
+  diagnosis: string | null;
   location_snapshot: ScanLocationSnapshot;
 };
 

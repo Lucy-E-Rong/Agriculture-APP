@@ -6,7 +6,7 @@ from uuid import UUID
 import httpx
 
 from app.config import Settings
-from app.schemas import AnalyzeScanRequest, AnalyzeScanResponse
+from app.schemas import AnalyzeScanRequest, AnalyzeScanResponse, PrototypeAnalysisResponse
 from app.supabase_persistence import PersistenceError, SupabaseScanStore
 
 
@@ -32,12 +32,12 @@ def analysis() -> AnalyzeScanResponse:
     )
 
 
-def request() -> AnalyzeScanRequest:
+def request(provider: str = "gemini") -> AnalyzeScanRequest:
     jpeg = b"\xff\xd8compressed-jpeg\xff\xd9"
     return AnalyzeScanRequest(
         image_base64=base64.b64encode(jpeg).decode(),
         image_mime_type="image/jpeg",
-        provider="gemini",
+        provider=provider,
         language="en",
         location_snapshot={"display": "GH1 · SA · T1 · R1"},
     )
@@ -76,6 +76,26 @@ class SupabaseScanStoreTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(seen[0].headers["apikey"], "sb_secret_test")
         self.assertNotIn("authorization", seen[0].headers)
 
+    async def test_prototype_is_preserved_in_scan_row(self) -> None:
+        seen: list[httpx.Request] = []
+
+        def handler(incoming: httpx.Request) -> httpx.Response:
+            seen.append(incoming)
+            return httpx.Response(201, request=incoming)
+
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            result = await SupabaseScanStore(self.settings(), client).persist_success(
+                request("prototype"), PrototypeAnalysisResponse(
+                    response_text="The leaves look droopy; check irrigation."
+                ), "gemini-test"
+            )
+
+        row = json.loads(seen[1].content)
+        self.assertEqual(row["ai_provider"], "prototype")
+        self.assertEqual(row["analysis_result"]["response_kind"], "prototype")
+        self.assertNotIn("stress_level", row)
+        self.assertEqual(result.response_text, "The leaves look droopy; check irrigation.")
+
     async def test_insert_failure_deletes_the_exact_uploaded_object(self) -> None:
         seen: list[httpx.Request] = []
 
@@ -94,6 +114,73 @@ class SupabaseScanStoreTests(unittest.IsolatedAsyncioTestCase):
         upload_path = str(seen[0].url).replace("?", "")
         delete_path = str(seen[2].url).replace("?", "")
         self.assertEqual(upload_path, delete_path)
+
+    async def test_insert_constraint_error_is_safe_and_keeps_diagnostics(self) -> None:
+        seen: list[httpx.Request] = []
+        sensitive_detail = (
+            "Failing row contains (private diagnosis, analysis_result, /9j/image-data, "
+            "sb_secret_test)"
+        )
+
+        def handler(incoming: httpx.Request) -> httpx.Response:
+            seen.append(incoming)
+            if "/rest/v1/scans" in str(incoming.url):
+                return httpx.Response(
+                    400,
+                    json={
+                        "code": "23514",
+                        "message": (
+                            'new row violates check constraint "scans_ai_provider_check"'
+                        ),
+                        "details": sensitive_detail,
+                        "hint": "Allow the prototype provider",
+                    },
+                    request=incoming,
+                )
+            return httpx.Response(200, request=incoming)
+
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            with self.assertLogs("farmscout.persistence", level="ERROR") as captured:
+                with self.assertRaises(PersistenceError) as raised:
+                    await SupabaseScanStore(self.settings(), client).persist_success(
+                        request("prototype"), analysis(), "gemini-test"
+                    )
+
+        diagnostic = f"{raised.exception} {' '.join(captured.output)}"
+        self.assertIn("status=400", diagnostic)
+        self.assertIn("23514", diagnostic)
+        self.assertIn("scans_ai_provider_check", diagnostic)
+        self.assertIn("Allow the prototype provider", diagnostic)
+        self.assertIn("[redacted: Supabase error may contain sensitive row data]", diagnostic)
+        for secret in (
+            "private diagnosis",
+            "analysis_result",
+            "/9j/image-data",
+            "sb_secret_test",
+            "authorization",
+        ):
+            with self.subTest(secret=secret):
+                self.assertNotIn(secret.lower(), diagnostic.lower())
+        self.assertEqual([item.method for item in seen], ["POST", "POST", "DELETE"])
+        self.assertEqual(
+            str(seen[0].url).replace("?", ""),
+            str(seen[2].url).replace("?", ""),
+        )
+
+    def test_non_json_error_body_is_bounded_and_redacts_credentials(self) -> None:
+        store = SupabaseScanStore(self.settings())
+        body = "Authorization: Bearer private-token " + "x" * 1000
+        response = httpx.Response(502, text=body)
+
+        with self.assertLogs("farmscout.persistence", level="ERROR") as captured:
+            with self.assertRaises(PersistenceError) as raised:
+                store._raise_for_status(response, "Scan row insert failed")
+
+        diagnostic = f"{raised.exception} {' '.join(captured.output)}"
+        self.assertIn("status=502", diagnostic)
+        self.assertIn("non-JSON", diagnostic)
+        self.assertIn("[truncated]", diagnostic)
+        self.assertNotIn("private-token", diagnostic)
 
     async def test_recent_query_enforces_contract_and_limit(self) -> None:
         def handler(incoming: httpx.Request) -> httpx.Response:

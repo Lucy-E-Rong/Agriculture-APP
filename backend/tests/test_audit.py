@@ -11,7 +11,7 @@ from starlette.requests import Request
 from app.audit import AuditEvent, CloudAuditWriter, build_audit_event, trusted_client_ip
 from app.config import Settings
 from app.main import app, settings
-from app.schemas import AnalyzeScanResponse, PersistedAnalyzeScanResponse
+from app.schemas import AnalyzeScanResponse, PersistedAnalyzeScanResponse, PrototypeAnalysisResponse
 
 
 class CapturingWriter:
@@ -62,6 +62,11 @@ class FakeProvider:
         if self.error:
             raise self.error
         return complete_analysis()
+
+
+class FakePrototypeProvider:
+    async def analyze(self, _request):
+        return PrototypeAnalysisResponse(response_text="Synthetic Prototype response")
 
 
 class FakeStore:
@@ -290,7 +295,23 @@ class AuditMiddlewareTests(unittest.TestCase):
         self.assertEqual(writer.events[0].provider, "prototype")
         self.assertEqual(writer.events[0].provider_outcome, "succeeded")
 
-    def test_scan_persistence_failure_emits_one_sanitized_category(self) -> None:
+    def test_gpt_selection_uses_minimal_api_provider_audit_category(self) -> None:
+        writer = CapturingWriter()
+        app.state.audit_writer = writer
+        with patch.object(settings, "openai_api_key", "synthetic"), patch(
+            "app.main.get_ai_provider", return_value=FakeProvider()
+        ), patch("app.main.SupabaseScanStore", FakeStore):
+            with self.client() as client:
+                response = client.post(
+                    "/api/scans/analyze",
+                    headers={"X-Demo-Access-Code": "correct-code"},
+                    json={"imageBase64": "/9j/2Q==", "imageMimeType": "image/jpeg", "provider": "prototype", "modelId": "gpt-5.6-terra", "language": "en"},
+                )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(writer.events), 1)
+        self.assertEqual(writer.events[0].provider, "api_provider")
+
+    def test_scan_persistence_failure_returns_analysis_and_emits_one_sanitized_category(self) -> None:
         writer = CapturingWriter()
         app.state.audit_writer = writer
         with patch("app.main.get_ai_provider", return_value=FakeProvider()), patch(
@@ -307,9 +328,27 @@ class AuditMiddlewareTests(unittest.TestCase):
                         "language": "en",
                     },
                 )
-        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["response_kind"], "farmscout")
         self.assertEqual(len(writer.events), 1)
         self.assertEqual(writer.events[0].provider_outcome, "succeeded")
+        self.assertEqual(writer.events[0].error_category, "persistence_failed")
+
+    def test_prototype_persistence_failure_keeps_free_text_shape(self) -> None:
+        writer = CapturingWriter()
+        app.state.audit_writer = writer
+        with patch("app.main.get_ai_provider", return_value=FakePrototypeProvider()), patch(
+            "app.main.SupabaseScanStore", FailingStore
+        ):
+            with self.client() as client:
+                response = client.post(
+                    "/api/scans/analyze",
+                    headers={"X-Demo-Access-Code": "correct-code"},
+                    json={"imageBase64": "/9j/2Q==", "imageMimeType": "image/jpeg", "provider": "prototype", "language": "en"},
+                )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"response_kind": "prototype", "response_text": "Synthetic Prototype response"})
+        self.assertEqual(len(writer.events), 1)
         self.assertEqual(writer.events[0].error_category, "persistence_failed")
 
 

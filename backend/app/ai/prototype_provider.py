@@ -1,10 +1,8 @@
-import json
-
 import httpx
 
 from app.ai.base import AiProviderClient
 from app.config import Settings
-from app.schemas import AnalyzeScanRequest, AnalyzeScanResponse
+from app.schemas import AnalyzeScanRequest, PrototypeAnalysisResponse
 
 
 PROTOTYPE_TASK = (
@@ -12,17 +10,7 @@ PROTOTYPE_TASK = (
     "it looks, and what I should check or do next."
 )
 
-# The first sentence is the complete A-group task. Everything after it is a
-# neutral serialization instruction required by the existing online response
-# contract; it deliberately contains no FarmScout assessment protocol.
-PROTOTYPE_PROMPT = f"""
-{PROTOTYPE_TASK}
-
-Return only JSON matching the supplied schema, with every required field present
-and no extra fields. Use ordinary visual judgment to fill the fields. Keep text
-and arrays concise. Do not use Markdown. If needs_human_review is false,
-human_review_reasons must be an empty array.
-""".strip()
+PROTOTYPE_PROMPT = PROTOTYPE_TASK
 
 
 class PrototypeNotConfiguredError(RuntimeError):
@@ -33,7 +21,7 @@ class PrototypeProvider(AiProviderClient):
     def __init__(self, settings: Settings):
         self.settings = settings
 
-    async def analyze(self, request: AnalyzeScanRequest) -> AnalyzeScanResponse:
+    async def analyze(self, request: AnalyzeScanRequest) -> PrototypeAnalysisResponse:
         prompt = build_prototype_prompt(request)
         if not prompt:
             raise PrototypeNotConfiguredError("Prototype is not configured")
@@ -61,8 +49,6 @@ class PrototypeProvider(AiProviderClient):
             }],
             "generationConfig": {
                 "temperature": 0.15,
-                "responseMimeType": "application/json",
-                "responseJsonSchema": prototype_response_schema(),
             },
         }
 
@@ -94,101 +80,11 @@ class PrototypeProvider(AiProviderClient):
                 f"Prototype returned no analysis (block reason: {block_reason})"
             ) from exc
 
-        try:
-            return AnalyzeScanResponse.model_validate(json.loads(text))
-        except (json.JSONDecodeError, ValueError) as exc:
-            raise RuntimeError("Prototype returned an invalid structured response") from exc
+        if not isinstance(text, str) or not text.strip():
+            raise RuntimeError("Prototype returned an empty text response")
+        return PrototypeAnalysisResponse(response_text=text.strip())
 
 
 def build_prototype_prompt(request: AnalyzeScanRequest) -> str:
     del request
     return PROTOTYPE_PROMPT.strip()
-
-
-def prototype_response_schema() -> dict:
-    string_array = {"type": "array", "items": {"type": "string"}}
-    return {
-        "type": "object",
-        "additionalProperties": False,
-        "properties": {
-            "crop_is_lettuce": {"type": "boolean"},
-            "crop_confidence": {"type": "number", "minimum": 0, "maximum": 1},
-            "image_quality": {
-                "type": "object",
-                "additionalProperties": False,
-                "properties": {
-                    "usable": {"type": "boolean"},
-                    "issues": string_array,
-                    "retake_guidance": string_array,
-                },
-                "required": ["usable", "issues", "retake_guidance"],
-            },
-            "plant_stress_detected": {"type": "boolean"},
-            "stress_level": {
-                "type": "string",
-                "enum": ["none", "low", "medium", "high", "critical"],
-            },
-            "severity_score": {"type": "integer", "minimum": 0, "maximum": 5},
-            "confidence": {"type": "number", "minimum": 0, "maximum": 1},
-            "diagnosis": {"type": "string"},
-            "observed_symptoms": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "additionalProperties": False,
-                    "properties": {
-                        "type": {"type": "string"},
-                        "location": {"type": "string"},
-                        "description": {"type": "string"},
-                    },
-                    "required": ["type", "location", "description"],
-                },
-            },
-            "possible_causes": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "additionalProperties": False,
-                    "properties": {
-                        "category": {"type": "string"},
-                        "likelihood": {
-                            "type": "string",
-                            "enum": ["uncertain", "possible", "likely"],
-                        },
-                        "reason": {"type": "string"},
-                    },
-                    "required": ["category", "likelihood", "reason"],
-                },
-            },
-            "detected_issues": string_array,
-            "recommendations": string_array,
-            "needs_human_review": {"type": "boolean"},
-            "human_review_reasons": {
-                "type": "array",
-                "items": {
-                    "type": "string",
-                    "enum": [
-                        "high_or_critical_water_stress",
-                        "non_water_factor_to_rule_out",
-                        "ambiguous_visual_evidence",
-                    ],
-                },
-            },
-        },
-        "required": [
-            "crop_is_lettuce",
-            "crop_confidence",
-            "image_quality",
-            "plant_stress_detected",
-            "stress_level",
-            "severity_score",
-            "confidence",
-            "diagnosis",
-            "observed_symptoms",
-            "possible_causes",
-            "detected_issues",
-            "recommendations",
-            "needs_human_review",
-            "human_review_reasons",
-        ],
-    }

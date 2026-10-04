@@ -16,8 +16,9 @@ from app.config import get_settings
 
 from app.schemas import (
     AnalyzeScanRequest,
+    AnalyzeEndpointResponse,
     HealthResponse,
-    PersistedAnalyzeScanResponse,
+    PersistedAnalysisResponse,
     RecentScan,
     ScanDetail,
 )
@@ -89,11 +90,11 @@ async def verify_access(x_demo_access_code: str | None = Header(default=None)) -
     return {"ok": True}
 
 
-def model_name_for_provider(provider: str) -> str | None:
-    if provider == "gemini":
+def model_name_for_selection(provider: str, model_id: str) -> str | None:
+    if model_id == "gemini-3.6-flash":
         return settings.gemini_model
-    if provider == "prototype":
-        return settings.gemini_model
+    if model_id == "gpt-5.6-terra":
+        return settings.openai_model
     if provider == "local_vlm":
         return settings.local_vlm_url
     if provider == "api_provider":
@@ -105,15 +106,15 @@ def model_name_for_provider(provider: str) -> str | None:
     return "mock"
 
 
-@app.post("/api/scans/analyze", response_model=PersistedAnalyzeScanResponse)
+@app.post("/api/scans/analyze", response_model=AnalyzeEndpointResponse)
 async def analyze_scan(
     request: AnalyzeScanRequest,
     http_request: Request,
     x_demo_access_code: str | None = Header(default=None),
-) -> PersistedAnalyzeScanResponse:
+) -> AnalyzeEndpointResponse:
     verify_demo_access_code(x_demo_access_code)
-    configure_provider_audit(http_request, request.provider, settings)
-    provider = get_ai_provider(request.provider, settings)
+    configure_provider_audit(http_request, request.provider, request.model_id, settings)
+    provider = get_ai_provider(request.provider, request.model_id, settings)
     try:
         analysis = await provider.analyze(request)
     except Exception as exc:
@@ -124,10 +125,12 @@ async def analyze_scan(
         http_request.state.audit_provider_outcome = "succeeded"
     try:
         store = SupabaseScanStore(settings)
-        return await store.persist_success(request, analysis, model_name_for_provider(request.provider))
+        return await store.persist_success(request, analysis, model_name_for_selection(request.provider, request.model_id))
     except PersistenceError as exc:
         http_request.state.audit_error_category = "persistence_failed"
-        raise HTTPException(status_code=503, detail="Analysis succeeded but could not be saved") from exc
+        # The visual result is still valid for the current request. Do not hide
+        # it merely because the optional Demo-history write failed.
+        return analysis
 
 
 @app.get("/api/scans/recent", response_model=list[RecentScan])
